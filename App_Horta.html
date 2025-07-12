@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Horta Escolar - Coleta de Dados</title>
+    <!-- Fontes e Estilos Visuais -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS com a paleta de cores do projeto e modo escuro
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        // Cores para o tema escuro
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .view, .modal { display: none; }
+        .loader {
+            border: 4px solid #424242;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1.5s linear infinite;
+        }
+        .dark .loader {
+             border: 4px solid #4a5568;
+             border-top: 4px solid #4CAF50;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
+
+    <!-- VISÃO 0: CARREGAMENTO INICIAL -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
+        <div class="loader"></div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
+        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Coleta de Dados da Natureza</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90">Entrar</button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button type="button" id="theme-toggle-login" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISÃO 2: PAINEL DO PROFESSOR -->
+    <div id="teacher-dashboard-view" class="view">
+        <header class="bg-white dark:bg-dark-card shadow-md">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel do Professor - Horta</h1>
+                 <div class="flex items-center gap-4">
+                    <button id="theme-toggle-teacher" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
+                    <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
+            </div>
+        </header>
+        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
+                <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-3">Filtrar Coletas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label for="filter-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
+                        <select id="filter-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <option value="todas">Todas as Turmas</option>
+                            <option value="6">6º Ano</option>
+                            <option value="7">7º Ano</option>
+                            <option value="8">8º Ano</option>
+                            <option value="9">9º Ano</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-date" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Coleta</label>
+                        <input type="date" id="filter-date" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                    </div>
+                    <div>
+                        <label for="filter-plant" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome ou Cód. da Planta</label>
+                        <input type="text" id="filter-plant" placeholder="Ex: Tomate ou PLT-01" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="filter-btn" class="w-full bg-verde-campo text-white font-bold py-2 px-4 rounded-md hover:bg-verde-campo/90">Filtrar</button>
+                        <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Alunos com Coletas Realizadas</h2>
+            <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
+                    <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
+                        <tr>
+                            <th class="px-4 py-3">Aluno</th>
+                            <th class="px-4 py-3">Turma</th>
+                            <th class="px-4 py-3">Nº de Coletas</th>
+                            <th class="px-4 py-3">Última Coleta</th>
+                            <th class="px-4 py-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-with-collections-table-body">
+                        <!-- Linhas da tabela de alunos serão inseridas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- VISÃO 3: PAINEL DO ALUNO -->
+    <div id="student-dashboard-view" class="view">
+         <header class="bg-white dark:bg-dark-card shadow-md">
+            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coleta de Dados da Horta</h1>
+                    <p id="student-name" class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Registre suas observações!</p>
+                </div>
+                 <div class="flex items-center gap-4">
+                    <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
+                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
+            </div>
+        </header>
+        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                <form id="collection-form" class="space-y-6">
+                    
+                    <div>
+                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">1. Identificação da Planta</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="plantId" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Código da Planta (QR Code)</label>
+                                <input type="text" id="plantId" class="mt-1 block w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                <div id="plant-id-status" class="text-xs mt-1"></div>
+                            </div>
+                             <div>
+                                <label for="plantName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Popular</label>
+                                <input type="text" id="plantName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                            </div>
+                            <div>
+                                <label for="plantScientificName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Científico</label>
+                                <input type="text" id="plantScientificName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div class="lg:col-span-3">
+                                <label for="plantDescription" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição da Planta</label>
+                                <textarea id="plantDescription" rows="2" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
+                            </div>
+                             <div class="lg:col-span-3">
+                                <label for="plantUses" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Possíveis Usos (culinário, medicinal, etc)</label>
+                                <input type="text" id="plantUses" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">2. Dados de Crescimento e Produção</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="plantingDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data de Plantio</label>
+                                <input type="date" id="plantingDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                            </div>
+                            <div>
+                                <label for="plantHeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Altura da Planta (cm)</label>
+                                <input type="number" step="0.1" id="plantHeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div>
+                                <label for="branchCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nº de Ramos ou Brotos Novos</label>
+                                <input type="number" id="branchCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div>
+                                <label for="flowerCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Flores</label>
+                                <input type="number" id="flowerCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                            <div>
+                                <label for="fruitCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Frutos</label>
+                                <input type="number" id="fruitCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div>
+                                <label for="lastHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Última Colheita</label>
+                                <input type="date" id="lastHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                            </div>
+                             <div>
+                                <label for="harvestWeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Peso dos Frutos Colhidos (g)</label>
+                                <input type="number" id="harvestWeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div>
+                                <label for="nextHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Próxima Colheita (previsão)</label>
+                                <input type="date" id="nextHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">3. Condições do Ambiente e Cuidados</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="sunExposure" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Exposição ao Sol (horas/dia)</label>
+                                <input type="number" id="sunExposure" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                            <div>
+                                <label for="waterAmount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Água diária (ml)</label>
+                                <input type="number" id="waterAmount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                            <div>
+                                <label for="soilType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Solo</label>
+                                <select id="soilType" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option>Não sei informar</option>
+                                    <option>Argiloso</option>
+                                    <option>Arenoso</option>
+                                    <option>Humífero (terra preta)</option>
+                                    <option>Outro</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="soilMoisture" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Umidade do Solo</option>
+                                <select id="soilMoisture" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option>Seca</option>
+                                    <option>Úmida</option>
+                                    <option>Encharcada</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="fertilizerType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Adubo Utilizado</label>
+                                <input type="text" id="fertilizerType" placeholder="Esterco, NPK, etc." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                             <div>
+                                <label for="needsFertilizing" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Precisou de Adubação?</label>
+                                <select id="needsFertilizing" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                         </div>
+                    </div>
+
+                     <div>
+                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">4. Saúde da Planta</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="hasPests" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pragas ou Doenças?</label>
+                                <select id="hasPests" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="hasWeeds" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Presença de Ervas Daninhas?</label>
+                                <select id="hasWeeds" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label for="hasDamagedLeaves" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Folhas Danificadas/Murchas?</label>
+                                <select id="hasDamagedLeaves" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                </select>
+                            </div>
+                             <div class="lg:col-span-3">
+                                <label for="leafColor" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Cor Predominante das Folhas</label>
+                                <input type="text" id="leafColor" placeholder="Verde claro, verde escuro, amarelada..." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            </div>
+                         </div>
+                    </div>
+                    
+                    <div>
+                         <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">5. Registro Fotográfico e Observações</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="plantPhoto" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Foto da Planta</label>
+                                <input type="file" id="plantPhoto" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/10 file:text-verde-campo hover:file:bg-verde-campo/20 cursor-pointer">
+                                <img id="photo-preview" class="hidden mt-4 rounded-lg max-h-48 mx-auto shadow-md">
+                            </div>
+                            <div>
+                                 <label for="generalObservations" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Observações Gerais</label>
+                                 <textarea id="generalObservations" rows="4" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 text-right">
+                        <button type="submit" id="save-collection-btn" class="bg-verde-campo text-white font-bold py-3 px-6 rounded-lg hover:bg-verde-campo/90 text-lg">Salvar Coleta</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- VISÃO 4: PÁGINA PÚBLICA DO VISITANTE -->
+    <div id="visitor-plant-view" class="view p-4 md:p-8">
+        <div class="max-w-2xl mx-auto bg-white dark:bg-dark-card p-6 rounded-2xl shadow-2xl">
+            <div id="visitor-content">
+                <!-- Conteúdo da planta para o visitante será inserido aqui -->
+            </div>
+             <div class="text-center mt-6">
+                <p class="text-xs text-gray-400 dark:text-dark-text-secondary/50">Criado por Ismael Alves</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE COLETAS DO ALUNO -->
+    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
+                <h2 id="student-collections-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coletas do Aluno</h2>
+                <button id="student-collections-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white">&times;</button>
+            </div>
+            <div class="overflow-y-auto">
+                <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
+                    <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
+                        <tr>
+                            <th class="px-4 py-3">Data</th>
+                            <th class="px-4 py-3">Planta</th>
+                            <th class="px-4 py-3">Cód. Planta</th>
+                            <th class="px-4 py-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-collections-list">
+                        <!-- Coletas de um aluno específico serão injetadas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DA COLETA -->
+    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div id="details-modal-header" class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
+                 <!-- Header do modal será injetado aqui -->
+            </div>
+            <div id="details-modal-content" class="overflow-y-auto space-y-4">
+                <!-- Conteúdo dos detalhes será injetado aqui -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL DE NOTIFICAÇÃO -->
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importação dos módulos do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, addDoc, serverTimestamp, orderBy, onSnapshot, setDoc, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const firebaseConfig = {
+  		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+  		    authDomain: "app-matematica-em-campo.firebaseapp.com",
+ 		    projectId: "app-matematica-em-campo",
+  		    storageBucket: "app-matematica-em-campo.firebasestorage.app",
+  		    messagingSenderId: "177907988624",
+  		    appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'matematica-em-campo';
+
+        const views = document.querySelectorAll('.view');
+        const modals = document.querySelectorAll('.modal');
+        let currentUserProfile = null;
+        let allCollectionsCache = [];
+        let allUsersCache = [];
+        let unsubscribeFromCollections = null;
+
+        // --- LÓGICA DE TEMA ---
+        const themeToggleBtns = [
+            document.getElementById('theme-toggle-login'),
+            document.getElementById('theme-toggle-student'),
+            document.getElementById('theme-toggle-teacher')
+        ];
+        const themeToggleDarkIcons = [
+            document.getElementById('theme-toggle-dark-icon-login'),
+            document.getElementById('theme-toggle-dark-icon-student'),
+            document.getElementById('theme-toggle-dark-icon-teacher')
+        ];
+        const themeToggleLightIcons = [
+            document.getElementById('theme-toggle-light-icon-login'),
+            document.getElementById('theme-toggle-light-icon-student'),
+            document.getElementById('theme-toggle-light-icon-teacher')
+        ];
+        const loginViewEl = document.getElementById('login-view');
+        const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+        const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+
+        function updateThemeVisuals(isDark) {
+            themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
+            themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
+            if(loginViewEl) {
+                loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            }
+        }
+
+        function setTheme(isDark) {
+             if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+            updateThemeVisuals(isDark);
+        }
+        
+        updateThemeVisuals(document.documentElement.classList.contains('dark'));
+        
+        themeToggleBtns.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    setTheme(!document.documentElement.classList.contains('dark'));
+                });
+            }
+        });
+        // --- FIM DA LÓGICA DE TEMA ---
+
+
+        function showView(viewId) {
+            views.forEach(v => v.style.display = 'none');
+            modals.forEach(m => m.style.display = 'none');
+            const viewToShow = document.getElementById(viewId);
+            if (viewToShow) {
+                const flexViews = ['login-view', 'loading-view'];
+                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (checkUrlForPlant()) {
+                return;
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        currentUserProfile = { id: user.uid, ...userDocSnap.data() };
+                        if (currentUserProfile.role === 'professor') {
+                            showView('teacher-dashboard-view');
+                            await loadTeacherInitialData();
+                        } else {
+                            document.getElementById('student-name').textContent = `Aluno(a): ${currentUserProfile.name}`;
+                            showView('student-dashboard-view');
+                        }
+                    } else { await signOut(auth); }
+                } else {
+                    currentUserProfile = null;
+                    if (unsubscribeFromCollections) unsubscribeFromCollections();
+                    showView('login-view');
+                }
+            });
+        });
+
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorP = document.getElementById('login-error');
+            const button = document.getElementById('login-button');
+            errorP.textContent = '';
+            button.disabled = true; button.textContent = 'Entrando...';
+            try { await signInWithEmailAndPassword(auth, email, password); } 
+            catch (error) { errorP.textContent = 'Usuário ou senha inválidos.'; } 
+            finally { button.disabled = false; button.textContent = 'Entrar'; }
+        });
+        
+        document.querySelectorAll('#teacher-logout-btn, #student-logout-btn').forEach(btn => {
+            btn.addEventListener('click', () => signOut(auth));
+        });
+
+        // --- LÓGICA DA PÁGINA PÚBLICA ---
+        function checkUrlForPlant() {
+            const params = new URLSearchParams(window.location.search);
+            const plantId = params.get('planta');
+            if (plantId) {
+                loadPublicPlantData(plantId.trim().toUpperCase());
+                return true;
+            }
+            return false;
+        }
+
+        async function loadPublicPlantData(plantId) {
+            showView('visitor-plant-view');
+            const contentDiv = document.getElementById('visitor-content');
+            contentDiv.innerHTML = `<div class="loader mx-auto"></div>`;
+
+            try {
+                const plantRef = doc(db, "artifacts", appId, "public", "data", "public_plants", plantId);
+                const docSnap = await getDoc(plantRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    const plantingDate = data.plantingDate ? new Date(data.plantingDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+                    const lastHarvestDate = data.lastHarvestDate ? new Date(data.lastHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+
+                    let html = `
+                        <h1 class="text-3xl font-bold text-center text-marrom-terra dark:text-dark-text">${data.plantName || 'Planta sem nome'}</h1>
+                        <p class="text-center text-gray-500 dark:text-dark-text-secondary italic mb-4">${data.plantScientificName || ''}</p>
+                    `;
+                    
+                    if (data.photoURL) {
+                        html += `<img src="${data.photoURL}" alt="Foto da ${data.plantName}" class="w-full h-auto max-h-80 object-cover rounded-lg shadow-md mb-6">`;
+                    }
+
+                    html += `
+                        <div class="bg-gray-100 dark:bg-dark-border/30 p-4 rounded-lg mb-4">
+                            <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-2">Descrição</h3>
+                            <p class="text-sm dark:text-dark-text-secondary">${data.plantDescription || 'Nenhuma descrição fornecida.'}</p>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-dark-border/30 p-4 rounded-lg mb-6">
+                            <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-2">Possíveis Usos</h3>
+                            <p class="text-sm dark:text-dark-text-secondary">${data.plantUses || 'Nenhum uso informado.'}</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Responsável pela última coleta:</strong> ${data.studentName || 'N/A'}</div>
+                            <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Altura da Planta:</strong> ${data.plantHeight || '0'} cm</div>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Data de Plantio:</strong> ${plantingDate}</div>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Tipo de Solo:</strong> ${data.soilType || 'N/A'}</div>
+                            <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Última Colheita:</strong> ${lastHarvestDate}</div>
+                            <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Peso Colhido:</strong> ${data.harvestWeight || '0'} g</div>
+                        </div>
+                    `;
+                    contentDiv.innerHTML = html;
+                } else {
+                    contentDiv.innerHTML = `<h1 class="text-2xl font-bold text-center text-red-600">Planta não encontrada</h1><p class="text-center dark:text-dark-text-secondary">O código da planta na URL pode ser inválido.</p>`;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados públicos da planta:", error);
+                contentDiv.innerHTML = `<h1 class="text-2xl font-bold text-center text-red-600">Erro ao carregar dados</h1><p class="text-center dark:text-dark-text-secondary">Houve um problema ao buscar as informações.</p>`;
+            }
+        }
+
+        // --- PAINEL DO PROFESSOR ---
+        async function loadTeacherInitialData() {
+            const usersQuery = query(collection(db, "users"), where("role", "==", "aluno"));
+            const usersSnapshot = await getDocs(usersQuery);
+            allUsersCache = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            listenForCollections();
+        }
+
+        function listenForCollections() {
+            const tableBody = document.getElementById('students-with-collections-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loader mx-auto"></div></td></tr>`;
+            
+            const q = query(collection(db, "plant_collections"), orderBy('collectedAt', 'desc'));
+            
+            if(unsubscribeFromCollections) unsubscribeFromCollections();
+
+            unsubscribeFromCollections = onSnapshot(q, (querySnapshot) => {
+                allCollectionsCache = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStudentsWithCollectionsTable();
+            }, (error) => {
+                 console.error("Error fetching collections:", error);
+                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Erro ao carregar dados.</td></tr>`;
+            });
+        }
+
+        function renderStudentsWithCollectionsTable() {
+            const tableBody = document.getElementById('students-with-collections-table-body');
+            
+            const studentsData = {};
+            allCollectionsCache.forEach(collection => {
+                if (!studentsData[collection.studentId]) {
+                    const studentInfo = allUsersCache.find(u => u.id === collection.studentId);
+                    studentsData[collection.studentId] = {
+                        studentId: collection.studentId,
+                        studentName: collection.studentName,
+                        turma: studentInfo ? studentInfo.turma : 'N/A',
+                        collectionCount: 0,
+                        lastUpdate: 0
+                    };
+                }
+                studentsData[collection.studentId].collectionCount++;
+                if (collection.collectedAt.seconds > studentsData[collection.studentId].lastUpdate) {
+                    studentsData[collection.studentId].lastUpdate = collection.collectedAt.seconds;
+                }
+            });
+
+            let studentsArray = Object.values(studentsData);
+
+            const filterTurma = document.getElementById('filter-turma').value;
+            const filterDate = document.getElementById('filter-date').value;
+            const filterPlant = document.getElementById('filter-plant').value.toLowerCase();
+
+            let filteredStudents = studentsArray.filter(student => {
+                const turmaMatch = (filterTurma === 'todas') || (student.turma == filterTurma);
+                
+                const studentCollections = allCollectionsCache.filter(c => c.studentId === student.studentId);
+                const dateMatch = !filterDate || studentCollections.some(c => new Date(c.collectedAt.seconds * 1000).toISOString().split('T')[0] === filterDate);
+                const plantMatch = !filterPlant || studentCollections.some(c => c.plantName.toLowerCase().includes(filterPlant) || (c.plantId && c.plantId.toLowerCase().includes(filterPlant)));
+
+                return turmaMatch && dateMatch && plantMatch;
+            });
+
+            if (filteredStudents.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500 dark:text-dark-text-secondary">Nenhum aluno com coletas encontradas para os filtros aplicados.</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = '';
+            filteredStudents.forEach(data => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b dark:border-dark-border hover:bg-sky-50 dark:hover:bg-dark-card';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold">${data.studentName}</td>
+                    <td class="px-4 py-3">${data.turma}º Ano</td>
+                    <td class="px-4 py-3">${data.collectionCount}</td>
+                    <td class="px-4 py-3">${new Date(data.lastUpdate * 1000).toLocaleDateString('pt-BR')}</td>
+                    <td class="px-4 py-3">
+                        <button data-student-id="${data.studentId}" class="view-student-collections-btn text-sm bg-azul-ceu/50 dark:bg-azul-ceu/20 text-marrom-terra dark:text-dark-text font-bold py-1 px-3 rounded-md hover:bg-azul-ceu dark:hover:bg-azul-ceu/40">Ver Coletas</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            tableBody.querySelectorAll('.view-student-collections-btn').forEach(btn => {
+                btn.addEventListener('click', () => showStudentCollectionsModal(btn.dataset.studentId));
+            });
+        }
+
+        document.getElementById('filter-btn').addEventListener('click', renderStudentsWithCollectionsTable);
+        document.getElementById('clear-filter-btn').addEventListener('click', () => {
+            document.getElementById('filter-turma').value = 'todas';
+            document.getElementById('filter-date').value = '';
+            document.getElementById('filter-plant').value = '';
+            renderStudentsWithCollectionsTable();
+        });
+        
+        // --- LÓGICA DO ALUNO (FORMULÁRIO) ---
+        const plantIdInput = document.getElementById('plantId');
+        plantIdInput.addEventListener('blur', async () => {
+            const plantId = plantIdInput.value.trim().toUpperCase();
+            const statusDiv = document.getElementById('plant-id-status');
+            if (!plantId) {
+                statusDiv.textContent = '';
+                return;
+            }
+
+            statusDiv.textContent = 'Buscando dados anteriores...';
+            statusDiv.style.color = 'gray';
+
+            const q = query(
+                collection(db, "plant_collections"),
+                where("plantId", "==", plantId)
+            );
+
+            try {
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const collections = querySnapshot.docs.map(doc => doc.data());
+                    collections.sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
+                    const lastData = collections[0];
+                    
+                    Object.keys(lastData).forEach(key => {
+                        const input = document.getElementById(key);
+                        if(input && key !== 'plantId') {
+                            input.value = lastData[key] || '';
+                        }
+                    });
+                    statusDiv.textContent = 'Dados da última coleta carregados.';
+                    statusDiv.style.color = 'green';
+                } else {
+                    statusDiv.textContent = 'Nenhuma coleta anterior encontrada. Preencha os dados.';
+                    statusDiv.style.color = 'orange';
+                    const currentPlantId = document.getElementById('plantId').value;
+                    document.getElementById('collection-form').reset();
+                    document.getElementById('plantId').value = currentPlantId;
+                }
+            } catch (error) {
+                console.error("Firebase query failed:", error);
+                statusDiv.textContent = 'Erro ao buscar dados. Tente novamente.';
+                statusDiv.style.color = 'red';
+            }
+        });
+
+        document.getElementById('plantPhoto').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const preview = document.getElementById('photo-preview');
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            } else {
+                preview.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('collection-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveBtn = document.getElementById('save-collection-btn');
+            saveBtn.disabled = true; saveBtn.textContent = 'Salvando...';
+
+            const collectionData = {
+                studentId: currentUserProfile.id,
+                studentName: currentUserProfile.name,
+                turma: currentUserProfile.turma,
+                collectedAt: serverTimestamp(),
+                photoURL: null,
+                plantId: document.getElementById('plantId').value.trim().toUpperCase(),
+                plantName: document.getElementById('plantName').value.trim(),
+                plantScientificName: document.getElementById('plantScientificName').value.trim(),
+                plantDescription: document.getElementById('plantDescription').value,
+                plantUses: document.getElementById('plantUses').value,
+                plantingDate: document.getElementById('plantingDate').value,
+                plantHeight: document.getElementById('plantHeight').value,
+                branchCount: document.getElementById('branchCount').value,
+                flowerCount: document.getElementById('flowerCount').value,
+                fruitCount: document.getElementById('fruitCount').value,
+                lastHarvestDate: document.getElementById('lastHarvestDate').value,
+                harvestWeight: document.getElementById('harvestWeight').value,
+                nextHarvestDate: document.getElementById('nextHarvestDate').value,
+                sunExposure: document.getElementById('sunExposure').value,
+                waterAmount: document.getElementById('waterAmount').value,
+                soilType: document.getElementById('soilType').value,
+                soilMoisture: document.getElementById('soilMoisture').value,
+                fertilizerType: document.getElementById('fertilizerType').value,
+                needsFertilizing: document.getElementById('needsFertilizing').value,
+                hasPests: document.getElementById('hasPests').value,
+                hasWeeds: document.getElementById('hasWeeds').value,
+                hasDamagedLeaves: document.getElementById('hasDamagedLeaves').value,
+                leafColor: document.getElementById('leafColor').value,
+                generalObservations: document.getElementById('generalObservations').value,
+            };
+
+            if (!collectionData.plantId || !collectionData.plantName) {
+                showNotification("O Código e o Nome da Planta são obrigatórios.");
+                saveBtn.disabled = false; saveBtn.textContent = 'Salvar Coleta';
+                return;
+            }
+            
+            try {
+                const file = document.getElementById('plantPhoto').files[0];
+                const publicPlantRef = doc(db, "artifacts", appId, "public", "data", "public_plants", collectionData.plantId);
+
+                if (file) {
+                    showNotification("Enviando foto...");
+                    const storageRef = ref(storage, `plant_photos/${collectionData.plantId}/${Date.now()}_${file.name}`);
+                    const uploadResult = await uploadBytes(storageRef, file);
+                    collectionData.photoURL = await getDownloadURL(uploadResult.ref);
+                } else {
+                    const docSnap = await getDoc(publicPlantRef);
+                    if (docSnap.exists() && docSnap.data().photoURL) {
+                        collectionData.photoURL = docSnap.data().photoURL;
+                    }
+                }
+
+                await addDoc(collection(db, "plant_collections"), collectionData);
+                
+                await setDoc(publicPlantRef, {
+                    plantId: collectionData.plantId,
+                    plantName: collectionData.plantName,
+                    plantScientificName: collectionData.plantScientificName,
+                    plantDescription: collectionData.plantDescription,
+                    plantUses: collectionData.plantUses,
+                    plantingDate: collectionData.plantingDate,
+                    plantHeight: collectionData.plantHeight,
+                    soilType: collectionData.soilType,
+                    studentName: collectionData.studentName,
+                    lastHarvestDate: collectionData.lastHarvestDate,
+                    harvestWeight: collectionData.harvestWeight,
+                    photoURL: collectionData.photoURL
+                }, { merge: true });
+
+                showNotification("Coleta salva com sucesso!");
+                document.getElementById('collection-form').reset();
+                document.getElementById('photo-preview').classList.add('hidden');
+                document.getElementById('plant-id-status').textContent = '';
+            } catch (error) {
+                console.error("Erro ao salvar coleta:", error);
+                showNotification("Falha ao salvar a coleta de dados.");
+            } finally {
+                saveBtn.disabled = false; saveBtn.textContent = 'Salvar Coleta';
+            }
+        });
+
+        // --- MODAIS ---
+        function showNotification(message) {
+            document.getElementById('notification-message').textContent = message;
+            document.getElementById('notification-modal').style.display = 'flex';
+        }
+        document.getElementById('notification-ok-btn').addEventListener('click', () => {
+            document.getElementById('notification-modal').style.display = 'none';
+        });
+        
+        function showStudentCollectionsModal(studentId) {
+            const student = allUsersCache.find(u => u.id === studentId);
+            if (!student) return;
+
+            const modal = document.getElementById('student-collections-modal');
+            const modalTitle = document.getElementById('student-collections-modal-title');
+            const listBody = document.getElementById('student-collections-list');
+
+            modalTitle.textContent = `Coletas de ${student.name}`;
+            listBody.innerHTML = '';
+
+            const studentCollections = allCollectionsCache
+                .filter(c => c.studentId === studentId)
+                .sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
+
+            if (studentCollections.length === 0) {
+                listBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500 dark:text-dark-text-secondary">Nenhuma coleta para este aluno.</td></tr>`;
+            } else {
+                studentCollections.forEach(data => {
+                    const date = new Date(data.collectedAt.seconds * 1000);
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b dark:border-dark-border hover:bg-sky-50 dark:hover:bg-dark-card';
+                    tr.innerHTML = `
+                        <td class="px-4 py-3">${date.toLocaleString('pt-BR')}</td>
+                        <td class="px-4 py-3 font-semibold">${data.plantName}</td>
+                        <td class="px-4 py-3 font-mono text-verde-campo">${data.plantId}</td>
+                        <td class="px-4 py-3">
+                            <button data-collection-id="${data.id}" class="view-collection-details-btn text-sm bg-azul-ceu/50 dark:bg-azul-ceu/20 text-marrom-terra dark:text-dark-text font-bold py-1 px-3 rounded-md hover:bg-azul-ceu dark:hover:bg-azul-ceu/40">Ver Detalhes</button>
+                        </td>
+                    `;
+                    listBody.appendChild(tr);
+                });
+            }
+
+            listBody.querySelectorAll('.view-collection-details-btn').forEach(btn => {
+                btn.addEventListener('click', () => showDetailsModal(btn.dataset.collectionId));
+            });
+            
+            modal.querySelector('#student-collections-modal-close-btn').addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        async function showDetailsModal(collectionId) {
+            const initialCollection = allCollectionsCache.find(c => c.id === collectionId);
+            if (!initialCollection) return;
+
+            const plantId = initialCollection.plantId;
+            const history = allCollectionsCache
+                .filter(c => c.plantId === plantId)
+                .sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
+
+            const modal = document.getElementById('details-modal');
+            const modalHeader = document.getElementById('details-modal-header');
+
+            let historyOptions = history.map(item => {
+                const date = new Date(item.collectedAt.seconds * 1000).toLocaleString('pt-BR');
+                const isSelected = item.id === collectionId ? 'selected' : '';
+                return `<option value="${item.id}" ${isSelected}>${date} - Por ${item.studentName}</option>`;
+            }).join('');
+
+            modalHeader.innerHTML = `
+                <div class="flex-grow">
+                    <h2 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Detalhes da Coleta</h2>
+                    <label for="history-select" class="text-sm font-medium text-gray-600 dark:text-dark-text-secondary mt-2 block">Ver histórico:</label>
+                    <select id="history-select" class="w-full md:w-auto text-sm font-normal mt-1 p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                        ${historyOptions}
+                    </select>
+                </div>
+                <button id="details-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white self-start ml-4">&times;</button>
+            `;
+            
+            renderModalContent(initialCollection);
+
+            modal.querySelector('#history-select').addEventListener('change', (e) => {
+                const selectedCollectionId = e.target.value;
+                const selectedData = history.find(c => c.id === selectedCollectionId);
+                if (selectedData) {
+                    renderModalContent(selectedData);
+                }
+            });
+            
+            modal.querySelector('#details-modal-close-btn').addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            modal.style.display = 'flex';
+        }
+        
+        function renderModalContent(data) {
+            const modalContent = document.getElementById('details-modal-content');
+
+            const collectedDate = data.collectedAt ? new Date(data.collectedAt.seconds * 1000).toLocaleDateString('pt-BR') : 'N/A';
+            const plantingDate = data.plantingDate ? new Date(data.plantingDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+            const lastHarvest = data.lastHarvestDate ? new Date(data.lastHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+            const nextHarvest = data.nextHarvestDate ? new Date(data.nextHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+
+            modalContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                    <div class="lg:col-span-3 bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Observações Gerais do Aluno:</strong><br>${data.generalObservations || 'Nenhuma'}</div>
+
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Data da Coleta:</strong> ${collectedDate}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nome Científico:</strong> ${data.plantScientificName || 'N/A'}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Usos Possíveis:</strong> ${data.plantUses || 'N/A'}</div>
+
+                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
+
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Altura:</strong> ${data.plantHeight || '0'} cm</div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Ramos/Brotos:</strong> ${data.branchCount || '0'}</div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Flores:</strong> ${data.flowerCount || '0'}</div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Frutos:</strong> ${data.fruitCount || '0'}</div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Peso da Colheita:</strong> ${data.harvestWeight || '0'} g</div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Cor das Folhas:</strong> ${data.leafColor || 'N/A'}</div>
+
+                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
+                    
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Data de Plantio:</strong> ${plantingDate}</div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Última Colheita:</strong> ${lastHarvest}</div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Próxima Colheita (Previsão):</strong> ${nextHarvest}</div>
+                    
+                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
+
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Exposição ao Sol:</strong> ${data.sunExposure || 'N/A'} horas/dia</div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Água Diária:</strong> ${data.waterAmount || 'N/A'} ml</div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Tipo de Solo:</strong> ${data.soilType || 'N/A'}</div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Umidade do Solo:</strong> ${data.soilMoisture || 'N/A'}</div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Adubo Utilizado:</strong> ${data.fertilizerType || 'Nenhum'}</div>
+                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Precisou de Adubo?:</strong> ${data.needsFertilizing || 'Não'}</div>
+                    
+                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
+                    
+                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Pragas/Doenças?:</strong> ${data.hasPests || 'Não'}</div>
+                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Ervas Daninhas?:</strong> ${data.hasWeeds || 'Não'}</div>
+                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Folhas Danificadas?:</strong> ${data.hasDamagedLeaves || 'Não'}</div>
+                </div>
+                <div class="mt-4 p-3 rounded-md bg-gray-100 dark:bg-dark-border/20">
+                    <h4 class="font-bold dark:text-dark-text">Descrição da Planta</h4>
+                    <p class="text-sm dark:text-dark-text-secondary">${data.plantDescription || 'Nenhuma descrição fornecida.'}</p>
+                </div>
+            `;
+        }
+
+    </script>
+</body>
+</html>
