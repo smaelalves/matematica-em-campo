@@ -1,7 +1,7 @@
 {
   "name": "Matemática em Campo",
   "short_name": "Mat. em Campo",
-  "start_url": "Painel.html",
+  "start_url": "App_Painel.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
