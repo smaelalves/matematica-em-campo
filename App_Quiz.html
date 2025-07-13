@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1a73e8">
+    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
 
@@ -152,7 +153,7 @@
                         <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="https://smaelalves.github.io/matematica-em-campo/App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
                     <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
@@ -288,7 +289,7 @@
                         <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="https://smaelalves.github.io/matematica-em-campo/App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
                     <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
@@ -391,9 +392,10 @@
 
 
     <script type="module">
+        // [MODIFICADO] Adicionado 'setDoc' para a função de copiar
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, writeBatch, increment, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, writeBatch, increment, deleteDoc, updateDoc, Timestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const DEFAULT_COMPLETION_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Ftrofeu.png?alt=media&token=3365c3ad-b722-470d-9e33-642187bae7b0';
@@ -452,6 +454,8 @@
         const resultsViewEl = document.getElementById('quiz-results-view');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+        // [NOVO] Referência para a meta tag de cor do tema
+        const themeColorMeta = document.getElementById('theme-color-meta');
 
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
@@ -461,24 +465,29 @@
             if(resultsViewEl) resultsViewEl.style.backgroundImage = bgUrl;
         }
 
-function setTheme(isDark) {
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('color-theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('color-theme', 'light');
-    }
-    updateThemeVisuals(isDark);
+        // [NOVO] Função para atualizar a cor da barra de título do navegador
+        function updateThemeColorMeta(isDark) {
+            if (themeColorMeta) {
+                themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
+            }
+        }
 
-    // Atualiza a cor da barra do navegador
-    const metaThemeColor = document.querySelector("meta[name='theme-color']");
-    if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", isDark ? "#121212" : "#1a73e8");
-    }
-}
+        // [MODIFICADO] Função de tema para incluir a atualização da meta tag
+        function setTheme(isDark) {
+             if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+            updateThemeVisuals(isDark);
+            updateThemeColorMeta(isDark); // Atualiza a cor da barra de título
+        }
         
+        // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
         updateThemeVisuals(document.documentElement.classList.contains('dark'));
+        updateThemeColorMeta(document.documentElement.classList.contains('dark'));
         
         themeToggleBtns.forEach(btn => {
             if(btn) {
@@ -635,11 +644,19 @@ function setTheme(isDark) {
             }
 
             if (!isEditing) {
-                const newQuizRef = doc(collection(db, 'quizzes'));
-                quizId = newQuizRef.id;
+                quizId = doc(collection(db, 'quizzes')).id;
             }
+            const quizRef = doc(db, 'quizzes', quizId);
 
             try {
+                let oldAssignedTo = [];
+                if (isEditing) {
+                    const oldQuizSnap = await getDoc(quizRef);
+                    if (oldQuizSnap.exists()) {
+                        oldAssignedTo = oldQuizSnap.data().assignedTo || [];
+                    }
+                }
+
                 const iconUploadInput = document.getElementById('quiz-icon-upload');
                 let iconUrl = document.getElementById('quiz-icon-url-hidden').value;
                 if (iconUploadInput.files[0]) {
@@ -710,16 +727,30 @@ function setTheme(isDark) {
                     authorId: userId,
                 };
 
-                const quizRef = doc(db, 'quizzes', quizId);
+                const batch = writeBatch(db);
+
+                const studentsToAdd = assignedTo.filter(id => !oldAssignedTo.includes(id));
+                const studentsToRemove = oldAssignedTo.filter(id => !assignedTo.includes(id));
+
+                studentsToAdd.forEach(studentId => {
+                    const studentRef = doc(db, "users", studentId);
+                    batch.update(studentRef, { activitiesAssignedCount: increment(1) });
+                });
+                studentsToRemove.forEach(studentId => {
+                    const studentRef = doc(db, "users", studentId);
+                    batch.update(studentRef, { activitiesAssignedCount: increment(-1) });
+                });
+                
                 if (isEditing) {
-                    await updateDoc(quizRef, quizData);
-                    showNotification("Quiz atualizado com sucesso!");
+                    batch.update(quizRef, quizData);
                 } else {
                     quizData.createdAt = serverTimestamp();
-                    await writeBatch(db).set(quizRef, quizData).commit();
-                    showNotification("Quiz criado com sucesso!");
+                    batch.set(quizRef, quizData);
                 }
+                
+                await batch.commit();
 
+                showNotification(isEditing ? "Quiz atualizado com sucesso!" : "Quiz criado com sucesso!");
                 showView('teacher-dashboard-view');
                 fetchAndDisplayTeacherQuizzes();
 
@@ -845,6 +876,7 @@ function setTheme(isDark) {
             });
         }
         
+        // [MODIFICADO] Adicionado botão e lógica para copiar quiz
         function showTeacherQuizDetailsModal(quizId) {
             const quiz = allQuizzesCache.find(q => q.id === quizId);
             if (!quiz) return;
@@ -880,6 +912,7 @@ function setTheme(isDark) {
 
             actions.innerHTML = `
                 <button id="modal-view-responses-btn" class="bg-azul-ceu text-white font-bold py-2 px-4 rounded-lg hover:bg-azul-ceu/90">Ver Respostas</button>
+                <button id="modal-copy-btn" class="bg-amarelo-sol text-marrom-terra font-bold py-2 px-4 rounded-lg hover:bg-amarelo-sol/90">Copiar</button>
                 <button id="modal-edit-btn" class="bg-verde-campo text-white font-bold py-2 px-4 rounded-lg hover:bg-verde-campo/90">Editar</button>
                 <button id="modal-delete-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Excluir</button>
             `;
@@ -887,15 +920,47 @@ function setTheme(isDark) {
             document.getElementById('modal-view-responses-btn').onclick = () => {
                 showQuizResponsesModal(quizId, quiz.title);
             };
+            
+            document.getElementById('modal-copy-btn').onclick = () => {
+                modal.style.display = 'none';
+                handleCopyQuiz(quizId);
+            };
 
             document.getElementById('modal-delete-btn').onclick = async () => {
-                if (confirm('Tem certeza que deseja excluir este quiz? Esta ação não pode ser desfeita.')) {
+                if (confirm('Tem certeza que deseja excluir este quiz? Esta ação não pode ser desfeita e irá ajustar o engajamento dos alunos.')) {
                     try {
+                        const updateCountsBatch = writeBatch(db);
+                        
+                        const attemptsQuery = query(collection(db, 'quiz_attempts'), where('quizId', '==', quizId));
+                        const attemptsSnapshot = await getDocs(attemptsQuery);
+                        const completedByStudentIds = attemptsSnapshot.docs.map(d => d.data().studentId);
+
+                        (quiz.assignedTo || []).forEach(studentId => {
+                            const studentRef = doc(db, 'users', studentId);
+                            const completed = completedByStudentIds.includes(studentId);
+                            
+                            if (completed) {
+                                updateCountsBatch.update(studentRef, {
+                                    activitiesAssignedCount: increment(-1),
+                                    activitiesCompletedCount: increment(-1)
+                                });
+                            } else {
+                                updateCountsBatch.update(studentRef, {
+                                    activitiesAssignedCount: increment(-1)
+                                });
+                            }
+                        });
+
+                        await updateCountsBatch.commit();
                         await deleteDoc(doc(db, 'quizzes', quizId));
-                        showNotification("Quiz excluído com sucesso.");
+
+                        showNotification("Quiz excluído e engajamento ajustado.");
                         modal.style.display = 'none';
                         fetchAndDisplayTeacherQuizzes();
-                    } catch (error) { showNotification("Falha ao excluir o quiz."); }
+                    } catch (error) { 
+                        console.error("Erro ao excluir quiz:", error);
+                        showNotification("Falha ao excluir o quiz."); 
+                    }
                 }
             };
             
@@ -958,6 +1023,43 @@ function setTheme(isDark) {
             document.getElementById('quiz-responses-modal').style.display = 'none';
         });
 
+        // [NOVO] Função para lidar com a cópia de um quiz
+        async function handleCopyQuiz(quizId) {
+            showView('loading-view');
+            const originalQuiz = allQuizzesCache.find(q => q.id === quizId);
+            if (!originalQuiz) {
+                showNotification("Quiz original não encontrado para cópia.");
+                showView('teacher-dashboard-view');
+                return;
+            }
+
+            try {
+                const newQuizData = {
+                    ...originalQuiz,
+                    title: `Cópia: ${originalQuiz.title}`,
+                    assignedTo: [], // Zera os alunos atribuídos
+                    turma: 'todos', // Reseta para "Todas as turmas"
+                    createdAt: serverTimestamp(),
+                    availableFrom: Timestamp.fromDate(new Date()),
+                    availableUntil: Timestamp.fromDate(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)), // Define prazo de 1 semana
+                };
+                
+                delete newQuizData.id; // Remove o ID antigo
+
+                const newQuizRef = doc(collection(db, 'quizzes'));
+                await setDoc(newQuizRef, newQuizData);
+                
+                showNotification("Quiz copiado! Edite e atribua aos alunos.");
+                
+                await fetchAndDisplayTeacherQuizzes();
+                handleEditQuiz(newQuizRef.id);
+
+            } catch (error) {
+                console.error("Erro ao copiar o quiz:", error);
+                showNotification("Falha ao criar uma cópia do quiz.");
+                showView('teacher-dashboard-view');
+            }
+        }
 
         async function handleEditQuiz(quizId) {
             const quizDoc = await getDoc(doc(db, 'quizzes', quizId));
@@ -985,7 +1087,7 @@ function setTheme(isDark) {
                 if (quizData.turma !== 'todos') {
                     quizTurmaSelect.dispatchEvent(new Event('change'));
                     setTimeout(() => {
-                        quizData.assignedTo.forEach(studentId => {
+                        (quizData.assignedTo || []).forEach(studentId => {
                             const checkbox = studentListDiv.querySelector(`input[value="${studentId}"]`);
                             if (checkbox) checkbox.checked = true;
                         });
@@ -1266,7 +1368,12 @@ function setTheme(isDark) {
                 completedAt: serverTimestamp()
             });
             const userRef = doc(db, 'users', currentUserProfile.id);
-            batch.update(userRef, { xp: increment(xpEarned) });
+            
+            batch.update(userRef, { 
+                xp: increment(xpEarned),
+                activitiesCompletedCount: increment(1) 
+            });
+
             const xpHistoryRef = doc(collection(userRef, 'xp_history'));
             batch.set(xpHistoryRef, {
                 points: xpEarned,
