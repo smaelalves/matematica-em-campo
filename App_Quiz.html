@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
     <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
@@ -392,7 +391,6 @@
 
 
     <script type="module">
-        // [MODIFICADO] Adicionado 'setDoc' para a função de copiar
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, writeBatch, increment, deleteDoc, updateDoc, Timestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -454,7 +452,6 @@
         const resultsViewEl = document.getElementById('quiz-results-view');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
-        // [NOVO] Referência para a meta tag de cor do tema
         const themeColorMeta = document.getElementById('theme-color-meta');
 
         function updateThemeVisuals(isDark) {
@@ -465,14 +462,12 @@
             if(resultsViewEl) resultsViewEl.style.backgroundImage = bgUrl;
         }
 
-        // [NOVO] Função para atualizar a cor da barra de título do navegador
         function updateThemeColorMeta(isDark) {
             if (themeColorMeta) {
                 themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
             }
         }
 
-        // [MODIFICADO] Função de tema para incluir a atualização da meta tag
         function setTheme(isDark) {
              if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -482,10 +477,9 @@
                 localStorage.setItem('color-theme', 'light');
             }
             updateThemeVisuals(isDark);
-            updateThemeColorMeta(isDark); // Atualiza a cor da barra de título
+            updateThemeColorMeta(isDark);
         }
         
-        // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
         updateThemeVisuals(document.documentElement.classList.contains('dark'));
         updateThemeColorMeta(document.documentElement.classList.contains('dark'));
         
@@ -876,7 +870,6 @@
             });
         }
         
-        // [MODIFICADO] Adicionado botão e lógica para copiar quiz
         function showTeacherQuizDetailsModal(quizId) {
             const quiz = allQuizzesCache.find(q => q.id === quizId);
             if (!quiz) return;
@@ -1023,7 +1016,6 @@
             document.getElementById('quiz-responses-modal').style.display = 'none';
         });
 
-        // [NOVO] Função para lidar com a cópia de um quiz
         async function handleCopyQuiz(quizId) {
             showView('loading-view');
             const originalQuiz = allQuizzesCache.find(q => q.id === quizId);
@@ -1037,14 +1029,14 @@
                 const newQuizData = {
                     ...originalQuiz,
                     title: `Cópia: ${originalQuiz.title}`,
-                    assignedTo: [], // Zera os alunos atribuídos
-                    turma: 'todos', // Reseta para "Todas as turmas"
+                    assignedTo: [], 
+                    turma: 'todos', 
                     createdAt: serverTimestamp(),
                     availableFrom: Timestamp.fromDate(new Date()),
-                    availableUntil: Timestamp.fromDate(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)), // Define prazo de 1 semana
+                    availableUntil: Timestamp.fromDate(new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)),
                 };
                 
-                delete newQuizData.id; // Remove o ID antigo
+                delete newQuizData.id;
 
                 const newQuizRef = doc(collection(db, 'quizzes'));
                 await setDoc(newQuizRef, newQuizData);
@@ -1347,6 +1339,7 @@
             }
         });
 
+        // [MODIFICADO] Função de finalizar quiz para usar XP fixo
         async function finishQuiz() {
             let score = 0;
             currentQuiz.questions.forEach((q, index) => {
@@ -1355,7 +1348,8 @@
                 }
             });
 
-            const xpEarned = Math.round((score / currentQuiz.questions.length) * currentQuiz.xp);
+            // O aluno ganha o XP total do quiz apenas por completar, independente da nota.
+            const xpEarned = currentQuiz.xp; 
             
             const batch = writeBatch(db);
             const attemptRef = doc(collection(db, 'quiz_attempts'));
