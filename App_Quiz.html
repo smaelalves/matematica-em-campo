@@ -95,9 +95,9 @@
             max-height: 200px;
             object-fit: contain;
         }
-        /* Garante que o card tenha uma proporção quadrada e seja responsivo */
+        /* [REMOVIDO] aspect-ratio para permitir que o card se ajuste ao conteúdo */
         .quiz-card {
-            aspect-ratio: 1 / 1.1;
+            min-height: 280px; /* Altura mínima para consistência */
         }
         /* Estilo para o container do background */
         #background-container {
@@ -168,7 +168,7 @@
                         <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <a href="V2.0 App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
                     <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
@@ -319,7 +319,7 @@
                         <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <a href="V2.0 App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
                     <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
@@ -337,8 +337,8 @@
     </div>
 
     <!-- VISÃO 5: ALUNO RESPONDENDO O QUIZ -->
-    <div id="quiz-taking-view" class="view min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-2xl bg-white/80 dark:bg-dark-card/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl">
+    <div id="quiz-taking-view" class="view min-h-screen flex flex-col items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <div class="w-full max-w-2xl bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
             <div class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2.5 mb-4">
               <div id="quiz-progress-bar" class="bg-amarelo-sol h-2.5 rounded-full progress-bar-quiz" style="width: 0%"></div>
             </div>
@@ -373,14 +373,14 @@
     </div>
 
     <!-- MODAIS -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 flex items-center justify-center p-4 z-50">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
         </div>
     </div>
     
-    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 flex items-center justify-center p-4 z-50">
+    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="teacher-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -391,7 +391,7 @@
         </div>
     </div>
     
-    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 flex items-center justify-center p-4 z-50">
+    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="student-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -402,7 +402,7 @@
         </div>
     </div>
     
-    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 flex items-center justify-center p-4 z-50">
+    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="quiz-responses-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Respostas do Quiz</h2>
@@ -530,7 +530,8 @@
             document.querySelectorAll('.view, .modal').forEach(v => v.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                viewToShow.style.display = (viewId.includes('login') || viewId.includes('results') || viewId.includes('taking') || viewId.includes('loading')) ? 'flex' : 'block';
+                const flexViews = ['login-view', 'loading-view', 'quiz-taking-view', 'quiz-results-view'];
+                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
             }
         }
 
@@ -885,7 +886,7 @@
                         ${statusText}
                     </div>
                     
-                    <div class="flex flex-col h-full items-center justify-center pt-4">
+                    <div class="flex flex-col h-full items-center justify-between pt-4">
                         <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
                         <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
@@ -893,8 +894,6 @@
                         <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${targetText}</p>
                         
                         <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
-                        
-                        <div class="flex-grow"></div>
                         
                         <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
                            <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
@@ -1247,14 +1246,14 @@
                         ${statusText}
                     </div>
                     
-                    <div class="flex flex-col h-full items-center justify-center pt-4">
+                    <div class="flex flex-col h-full items-center justify-between pt-4">
                         <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
                         <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
                         
-                        <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
+                        <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${quiz.questions.length} questões</p>
                         
-                        <div class="flex-grow"></div>
+                        <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
                         
                         <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
                            <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
@@ -1436,9 +1435,8 @@
         });
 
         function showNotification(message) {
-            const modal = document.getElementById('notification-modal');
             document.getElementById('notification-message').textContent = message;
-            modal.style.display = 'flex';
+            document.getElementById('notification-modal').style.display = 'flex';
         }
         document.getElementById('notification-ok-btn').addEventListener('click', () => {
             document.getElementById('notification-modal').style.display = 'none';
