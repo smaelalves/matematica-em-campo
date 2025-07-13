@@ -9,11 +9,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
 
-    <title>Horta Escolar - Coleta de Dados</title>
+
+    <title>Quiz - Matemática em Campo</title>
     <!-- Fontes e Estilos Visuais -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC
@@ -49,6 +50,7 @@
         }
     </script>
     <style>
+        /* Estilos customizados para visibilidade, animações e componentes */
         .view, .modal { display: none; }
         .loader {
             border: 4px solid #424242;
@@ -66,6 +68,38 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* Estilo para a barra de progresso do quiz */
+        .progress-bar-quiz {
+            transition: width 0.4s ease-in-out;
+        }
+        /* Estilo para as opções de resposta */
+        .answer-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .answer-option.selected {
+            background-color: #81D4FA; /* azul-ceu */
+            border-color: #4CAF50; /* verde-campo */
+            color: #8D6E63; /* marrom-terra */
+        }
+        .dark .answer-option.selected {
+            background-color: #4CAF50;
+            border-color: #FDD835;
+            color: #e0e0e0;
+        }
+        .answer-option:not(.selected):hover {
+            background-color: #f0f9ff;
+        }
+        .dark .answer-option:not(.selected):hover {
+            background-color: #2a2a2a;
+        }
+        #question-image-display, .question-image-preview {
+            max-height: 200px;
+            object-fit: contain;
+        }
+        /* Garante que o card tenha uma proporção quadrada e seja responsivo */
+        .quiz-card {
+            aspect-ratio: 1 / 1.1;
+        }
     </style>
 </head>
 <body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
@@ -80,7 +114,7 @@
         <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
-                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Coleta de Dados da Natureza</p>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Teste seus conhecimentos!</p>
                 <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
             </div>
             <form id="login-form">
@@ -98,7 +132,7 @@
                 <div class="mt-6">
                     <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90">Entrar</button>
                 </div>
-                 <div class="mt-6 text-center">
+                <div class="mt-6 text-center">
                     <button type="button" id="theme-toggle-login" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
                         <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
@@ -108,317 +142,261 @@
         </div>
     </div>
 
-    <!-- VISÃO 2: PAINEL DO PROFESSOR -->
+    <!-- VISÃO 2: PAINEL DO PROFESSOR (LISTA DE QUIZZES) -->
     <div id="teacher-dashboard-view" class="view">
         <header class="bg-white dark:bg-dark-card shadow-md">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel do Professor - Horta</h1>
-                 <div class="flex items-center gap-4">
-                    <button id="theme-toggle-teacher" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel de Quizzes</h1>
+                <div class="flex items-center gap-4">
+                     <button id="theme-toggle-teacher" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                         <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
+                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
                     <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
         </header>
         <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            
             <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
-                <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-3">Filtrar Coletas</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-marrom-terra dark:text-dark-text">Filtrar Quizzes</h3>
+                    <button id="go-to-create-quiz-btn" class="bg-verde-campo text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-verde-campo/90 transition-all text-sm">
+                        + Novo Quiz
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end pt-4 border-t dark:border-dark-border">
                     <div>
-                        <label for="filter-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
-                        <select id="filter-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            <option value="todas">Todas as Turmas</option>
+                        <label for="filter-quiz-title" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
+                        <input type="text" id="filter-quiz-title" placeholder="Pesquisar..." class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                    </div>
+                    <div>
+                        <label for="filter-quiz-status" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Status</label>
+                        <select id="filter-quiz-status" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <option value="todos">Todos</option>
+                            <option value="Agendado">Agendado</option>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Encerrado">Encerrado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-quiz-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
+                        <select id="filter-quiz-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <option value="todos">Todas as Turmas</option>
                             <option value="6">6º Ano</option>
                             <option value="7">7º Ano</option>
                             <option value="8">8º Ano</option>
                             <option value="9">9º Ano</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="filter-date" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Coleta</label>
-                        <input type="date" id="filter-date" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                    </div>
-                    <div>
-                        <label for="filter-plant" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome ou Cód. da Planta</label>
-                        <input type="text" id="filter-plant" placeholder="Ex: Tomate ou PLT-01" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                    </div>
                     <div class="flex gap-2">
-                        <button id="filter-btn" class="w-full bg-verde-campo text-white font-bold py-2 px-4 rounded-md hover:bg-verde-campo/90">Filtrar</button>
+                        <button id="filter-btn" class="w-full bg-azul-ceu/80 text-white font-bold py-2 px-4 rounded-md hover:bg-azul-ceu">Filtrar</button>
                         <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
                     </div>
                 </div>
             </div>
-            <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Alunos com Coletas Realizadas</h2>
-            <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
-                    <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
-                        <tr>
-                            <th class="px-4 py-3">Aluno</th>
-                            <th class="px-4 py-3">Turma</th>
-                            <th class="px-4 py-3">Nº de Coletas</th>
-                            <th class="px-4 py-3">Última Coleta</th>
-                            <th class="px-4 py-3">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-with-collections-table-body">
-                        <!-- Linhas da tabela de alunos serão inseridas aqui -->
-                    </tbody>
-                </table>
+
+            <div id="quizzes-list-teacher" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Cards de quizzes do professor serão preenchidos aqui -->
             </div>
         </main>
     </div>
 
-    <!-- VISÃO 3: PAINEL DO ALUNO -->
-    <div id="student-dashboard-view" class="view">
-         <header class="bg-white dark:bg-dark-card shadow-md">
-            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coleta de Dados da Horta</h1>
-                    <p id="student-name" class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Registre suas observações!</p>
-                </div>
-                 <div class="flex items-center gap-4">
-                    <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
-                        <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+    <!-- VISÃO 3: PROFESSOR CRIANDO/EDITANDO QUIZ -->
+    <div id="quiz-creator-view" class="view">
+        <main class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
+                <form id="create-quiz-form" class="space-y-6">
+                    <input type="hidden" id="quiz-id">
+                    <input type="hidden" id="quiz-icon-url-hidden">
+                    <h2 id="creator-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text mb-6">Criar Novo Quiz</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="quiz-title" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
+                            <input id="quiz-title" type="text" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                        </div>
+                        <div>
+                            <label for="quiz-xp" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pontos de XP pelo Quiz</label>
+                            <input id="quiz-xp" type="number" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="quiz-description" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição do Quiz</label>
+                        <textarea id="quiz-description" rows="3" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" placeholder="Explique o objetivo ou conteúdo do quiz..."></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="quiz-available-from" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Disponível de:</label>
+                            <input id="quiz-available-from" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
+                        </div>
+                        <div>
+                            <label for="quiz-available-until" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Até:</label>
+                            <input id="quiz-available-until" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="quiz-icon-upload" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Ícone do Quiz</label>
+                        <input id="quiz-icon-upload" type="file" class="mt-1 w-full text-sm text-marrom-terra dark:text-dark-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/20 file:text-verde-campo hover:file:bg-verde-campo/30"/>
+                        <p id="quiz-icon-status" class="text-xs mt-1 text-gray-500"></p>
+                    </div>
+
+                    <div id="questions-container" class="space-y-6 pt-6 border-t dark:border-dark-border"></div>
+                    <button type="button" id="add-question-btn" class="w-full text-sm font-bold text-verde-campo border-2 border-dashed border-verde-campo rounded-lg py-2 hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">
+                        + Adicionar Pergunta
                     </button>
-                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
-                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
-                </div>
-            </div>
-        </header>
-        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
-                <form id="collection-form" class="space-y-6">
                     
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">1. Identificação da Planta</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="plantId" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Código da Planta (QR Code)</label>
-                                <input type="text" id="plantId" class="mt-1 block w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                                <div id="plant-id-status" class="text-xs mt-1"></div>
-                            </div>
-                             <div>
-                                <label for="plantName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Popular</label>
-                                <input type="text" id="plantName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                            </div>
-                            <div>
-                                <label for="plantScientificName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Científico</label>
-                                <input type="text" id="plantScientificName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="plantDescription" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição da Planta</label>
-                                <textarea id="plantDescription" rows="2" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="plantUses" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Possíveis Usos (culinário, medicinal, etc)</label>
-                                <input type="text" id="plantUses" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
+                    <div class="pt-6 border-t dark:border-dark-border space-y-4">
+                        <div>
+                            <label for="quiz-turma-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
+                            <select id="quiz-turma-select" class="w-full mt-1 p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                <option value="todos">Todas as Turmas</option>
+                                <option value="6">6º Ano</option>
+                                <option value="7">7º Ano</option>
+                                <option value="8">8º Ano</option>
+                                <option value="9">9º Ano</option>
+                            </select>
+                        </div>
+                        <div id="quiz-student-list-container" class="hidden">
+                            <label class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Escolha os alunos:</label>
+                            <div id="quiz-student-list" class="mt-2 p-3 border rounded-md h-32 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-dark-border text-sm"></div>
                         </div>
                     </div>
 
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">2. Dados de Crescimento e Produção</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="plantingDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data de Plantio</label>
-                                <input type="date" id="plantingDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                            </div>
-                            <div>
-                                <label for="plantHeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Altura da Planta (cm)</label>
-                                <input type="number" step="0.1" id="plantHeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="branchCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nº de Ramos ou Brotos Novos</label>
-                                <input type="number" id="branchCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="flowerCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Flores</label>
-                                <input type="number" id="flowerCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="fruitCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Frutos</label>
-                                <input type="number" id="fruitCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="lastHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Última Colheita</label>
-                                <input type="date" id="lastHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                            </div>
-                             <div>
-                                <label for="harvestWeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Peso dos Frutos Colhidos (g)</label>
-                                <input type="number" id="harvestWeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="nextHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Próxima Colheita (previsão)</label>
-                                <input type="date" id="nextHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">3. Condições do Ambiente e Cuidados</h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="sunExposure" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Exposição ao Sol (horas/dia)</label>
-                                <input type="number" id="sunExposure" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="waterAmount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Água diária (ml)</label>
-                                <input type="number" id="waterAmount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="soilType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Solo</label>
-                                <select id="soilType" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option>Não sei informar</option>
-                                    <option>Argiloso</option>
-                                    <option>Arenoso</option>
-                                    <option>Humífero (terra preta)</option>
-                                    <option>Outro</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="soilMoisture" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Umidade do Solo</option>
-                                <select id="soilMoisture" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option>Seca</option>
-                                    <option>Úmida</option>
-                                    <option>Encharcada</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="fertilizerType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Adubo Utilizado</label>
-                                <input type="text" id="fertilizerType" placeholder="Esterco, NPK, etc." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="needsFertilizing" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Precisou de Adubação?</label>
-                                <select id="needsFertilizing" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                         </div>
-                    </div>
-
-                     <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">4. Saúde da Planta</h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="hasPests" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pragas ou Doenças?</label>
-                                <select id="hasPests" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="hasWeeds" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Presença de Ervas Daninhas?</label>
-                                <select id="hasWeeds" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="hasDamagedLeaves" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Folhas Danificadas/Murchas?</label>
-                                <select id="hasDamagedLeaves" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="leafColor" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Cor Predominante das Folhas</label>
-                                <input type="text" id="leafColor" placeholder="Verde claro, verde escuro, amarelada..." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                         </div>
-                    </div>
-                    
-                    <div>
-                         <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">5. Registro Fotográfico e Observações</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="plantPhoto" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Foto da Planta</label>
-                                <input type="file" id="plantPhoto" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/10 file:text-verde-campo hover:file:bg-verde-campo/20 cursor-pointer">
-                                <img id="photo-preview" class="hidden mt-4 rounded-lg max-h-48 mx-auto shadow-md">
-                            </div>
-                            <div>
-                                 <label for="generalObservations" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Observações Gerais</label>
-                                 <textarea id="generalObservations" rows="4" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 text-right">
-                        <button type="submit" id="save-collection-btn" class="bg-verde-campo text-white font-bold py-3 px-6 rounded-lg hover:bg-verde-campo/90 text-lg">Salvar Coleta</button>
+                    <div class="flex gap-4 pt-6 border-t dark:border-dark-border">
+                        <button type="button" id="cancel-quiz-creation-btn" class="w-1/3 bg-gray-300 dark:bg-dark-border text-marrom-terra dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-400">Cancelar</button>
+                        <button type="submit" id="save-quiz-btn" class="w-2/3 bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Salvar Quiz</button>
                     </div>
                 </form>
             </div>
         </main>
     </div>
 
-    <!-- VISÃO 4: PÁGINA PÚBLICA DO VISITANTE -->
-    <div id="visitor-plant-view" class="view p-4 md:p-8">
-        <div class="max-w-2xl mx-auto bg-white dark:bg-dark-card p-6 rounded-2xl shadow-2xl">
-            <div id="visitor-content">
-                <!-- Conteúdo da planta para o visitante será inserido aqui -->
+    <!-- VISÃO 4: PAINEL DO ALUNO (LISTA DE QUIZZES) -->
+    <div id="student-dashboard-view" class="view">
+         <header class="bg-white dark:bg-dark-card shadow-md">
+            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Meus Quizzes</h1>
+                    <p id="student-name" class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Bem-vindo(a)!</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <a href="https://smaelalves.github.io/matematica-em-campo/Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
             </div>
-             <div class="text-center mt-6">
-                <p class="text-xs text-gray-400 dark:text-dark-text-secondary/50">Criado por Ismael Alves</p>
+        </header>
+        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div id="quizzes-list-student" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Cards dos quizzes para o aluno serão preenchidos aqui -->
+            </div>
+        </main>
+    </div>
+
+    <!-- VISÃO 5: ALUNO RESPONDENDO O QUIZ -->
+    <div id="quiz-taking-view" class="view min-h-screen bg-azul-ceu/20 dark:bg-dark-bg/50 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
+            <div class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2.5 mb-4">
+              <div id="quiz-progress-bar" class="bg-amarelo-sol h-2.5 rounded-full progress-bar-quiz" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary mb-6">
+                <h2 id="quiz-title-taking" class="text-lg">Título do Quiz</h2>
+                <p id="question-counter">Pergunta 1/10</p>
+            </div>
+
+            <div id="question-display">
+                <img id="question-image-display" src="" alt="Imagem da pergunta" class="w-full rounded-lg mb-4 hidden">
+                <p id="question-text" class="text-xl font-semibold text-marrom-terra dark:text-dark-text text-center mb-6">Texto da pergunta aqui...</p>
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button id="next-question-btn" class="bg-verde-campo text-white font-bold py-2 px-8 rounded-lg hover:bg-verde-campo/90">Próxima</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE COLETAS DO ALUNO -->
-    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <!-- VISÃO 6: RESULTADO DO QUIZ -->
+    <div id="quiz-results-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center">
+        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl text-center">
+            <h1 class="text-3xl font-bold text-marrom-terra dark:text-dark-text">Quiz Finalizado!</h1>
+            <img id="quiz-result-image" src="" class="w-32 h-32 mx-auto my-4"/>
+            <p id="score-text" class="text-2xl font-semibold text-marrom-terra dark:text-dark-text">Você acertou 8 de 10!</p>
+            <p id="xp-earned-text" class="text-4xl font-extrabold text-amarelo-sol my-4">+100 XP</p>
+            <p class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Essa pontuação foi adicionada ao seu perfil!</p>
+            <button id="back-to-dashboard-btn" class="mt-8 w-full bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Voltar ao Painel</button>
+        </div>
+    </div>
+
+    <!-- MODAIS -->
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
+        </div>
+    </div>
+    
+    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
+                <div id="teacher-quiz-modal-header" class="flex items-center gap-4"></div>
+                <button id="teacher-quiz-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white">&times;</button>
+            </div>
+            <div id="teacher-quiz-modal-content" class="overflow-y-auto space-y-4 text-sm text-marrom-terra dark:text-dark-text-secondary"></div>
+            <div id="teacher-quiz-modal-actions" class="mt-auto pt-4 border-t dark:border-dark-border flex justify-end gap-3"></div>
+        </div>
+    </div>
+    
+    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
+                <div id="student-quiz-modal-header" class="flex items-center gap-4"></div>
+                <button id="student-quiz-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white">&times;</button>
+            </div>
+            <div id="student-quiz-modal-content" class="overflow-y-auto space-y-4 text-sm text-marrom-terra dark:text-dark-text-secondary"></div>
+            <div id="student-quiz-modal-actions" class="mt-auto pt-4 border-t dark:border-dark-border flex justify-end"></div>
+        </div>
+    </div>
+    
+    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
-                <h2 id="student-collections-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coletas do Aluno</h2>
-                <button id="student-collections-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white">&times;</button>
+                <h2 id="quiz-responses-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Respostas do Quiz</h2>
+                <button id="quiz-responses-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white">&times;</button>
             </div>
             <div class="overflow-y-auto">
                 <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
                     <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
                         <tr>
-                            <th class="px-4 py-3">Data</th>
-                            <th class="px-4 py-3">Planta</th>
-                            <th class="px-4 py-3">Cód. Planta</th>
-                            <th class="px-4 py-3">Ações</th>
+                            <th class="px-4 py-3">Aluno</th>
+                            <th class="px-4 py-3">Nota</th>
+                            <th class="px-4 py-3">XP Ganhos</th>
+                            <th class="px-4 py-3">Data da Resposta</th>
                         </tr>
                     </thead>
-                    <tbody id="student-collections-list">
-                        <!-- Coletas de um aluno específico serão injetadas aqui -->
+                    <tbody id="quiz-responses-list">
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES DA COLETA -->
-    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
-        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <div id="details-modal-header" class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
-                 <!-- Header do modal será injetado aqui -->
-            </div>
-            <div id="details-modal-content" class="overflow-y-auto space-y-4">
-                <!-- Conteúdo dos detalhes será injetado aqui -->
-            </div>
-        </div>
-    </div>
-
-
-    <!-- MODAL DE NOTIFICAÇÃO -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
-        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
-            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
-            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
-        </div>
-    </div>
 
     <script type="module">
-        // Importação dos módulos do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, addDoc, serverTimestamp, orderBy, onSnapshot, setDoc, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, writeBatch, increment, deleteDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const DEFAULT_COMPLETION_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Ftrofeu.png?alt=media&token=3365c3ad-b722-470d-9e33-642187bae7b0';
 
         const firebaseConfig = {
   		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
@@ -433,14 +411,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'matematica-em-campo';
 
         const views = document.querySelectorAll('.view');
-        const modals = document.querySelectorAll('.modal');
+        const loginForm = document.getElementById('login-form');
+        const createQuizForm = document.getElementById('create-quiz-form');
+        const addQuestionBtn = document.getElementById('add-question-btn');
+        const questionsContainer = document.getElementById('questions-container');
+        const quizTurmaSelect = document.getElementById('quiz-turma-select');
+        const studentListContainer = document.getElementById('quiz-student-list-container');
+        const studentListDiv = document.getElementById('quiz-student-list');
+        const goToCreateQuizBtn = document.getElementById('go-to-create-quiz-btn');
+        const cancelQuizCreationBtn = document.getElementById('cancel-quiz-creation-btn');
+        
         let currentUserProfile = null;
-        let allCollectionsCache = [];
-        let allUsersCache = [];
-        let unsubscribeFromCollections = null;
+        let allStudentsCache = [];
+        let allQuizzesCache = []; 
+        let quizzesToShowCache = [];
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let studentAnswers = [];
+        let questionCounter = 0;
 
         // --- LÓGICA DE TEMA ---
         const themeToggleBtns = [
@@ -459,15 +449,16 @@
             document.getElementById('theme-toggle-light-icon-teacher')
         ];
         const loginViewEl = document.getElementById('login-view');
+        const resultsViewEl = document.getElementById('quiz-results-view');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
 
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
             themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-            if(loginViewEl) {
-                loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
-            }
+            const bgUrl = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            if(loginViewEl) loginViewEl.style.backgroundImage = bgUrl;
+            if(resultsViewEl) resultsViewEl.style.backgroundImage = bgUrl;
         }
 
 function setTheme(isDark) {
@@ -496,523 +487,834 @@ function setTheme(isDark) {
                 });
             }
         });
-        // --- FIM DA LÓGICA DE TEMA ---
-
 
         function showView(viewId) {
-            views.forEach(v => v.style.display = 'none');
-            modals.forEach(m => m.style.display = 'none');
+            document.querySelectorAll('.view, .modal').forEach(v => v.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                const flexViews = ['login-view', 'loading-view'];
-                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+                viewToShow.style.display = (viewId.includes('login') || viewId.includes('results') || viewId.includes('taking') || viewId.includes('loading')) ? 'flex' : 'block';
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            if (checkUrlForPlant()) {
-                return;
-            }
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        currentUserProfile = { id: user.uid, ...userDocSnap.data() };
-                        if (currentUserProfile.role === 'professor') {
-                            showView('teacher-dashboard-view');
-                            await loadTeacherInitialData();
-                        } else {
-                            document.getElementById('student-name').textContent = `Aluno(a): ${currentUserProfile.name}`;
-                            showView('student-dashboard-view');
-                        }
-                    } else { await signOut(auth); }
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                showView('loading-view');
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    currentUserProfile = { id: user.uid, ...userDocSnap.data() };
+                    if (currentUserProfile.role === 'professor') {
+                        const studentsQuery = query(collection(db, "users"), where("role", "==", "aluno"));
+                        const querySnapshot = await getDocs(studentsQuery);
+                        allStudentsCache = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        
+                        showView('teacher-dashboard-view');
+                        fetchAndDisplayTeacherQuizzes();
+                    } else {
+                        document.getElementById('student-name').textContent = `Bem-vindo(a), ${currentUserProfile.name}!`;
+                        showView('student-dashboard-view');
+                        loadStudentQuizzes();
+                    }
                 } else {
-                    currentUserProfile = null;
-                    if (unsubscribeFromCollections) unsubscribeFromCollections();
-                    showView('login-view');
+                    await signOut(auth);
                 }
-            });
+            } else {
+                currentUserProfile = null;
+                allStudentsCache = [];
+                showView('login-view');
+            }
         });
 
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorP = document.getElementById('login-error');
             const button = document.getElementById('login-button');
             errorP.textContent = '';
-            button.disabled = true; button.textContent = 'Entrando...';
-            try { await signInWithEmailAndPassword(auth, email, password); } 
-            catch (error) { errorP.textContent = 'Usuário ou senha inválidos.'; } 
-            finally { button.disabled = false; button.textContent = 'Entrar'; }
+            button.disabled = true;
+            button.textContent = 'Entrando...';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                errorP.textContent = 'Usuário ou senha inválidos.';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Entrar';
+            }
         });
         
         document.querySelectorAll('#teacher-logout-btn, #student-logout-btn').forEach(btn => {
             btn.addEventListener('click', () => signOut(auth));
         });
 
-        // --- LÓGICA DA PÁGINA PÚBLICA ---
-        function checkUrlForPlant() {
-            const params = new URLSearchParams(window.location.search);
-            const plantId = params.get('planta');
-            if (plantId) {
-                loadPublicPlantData(plantId.trim().toUpperCase());
-                return true;
-            }
-            return false;
-        }
+        goToCreateQuizBtn.addEventListener('click', () => {
+            resetCreatorForm();
+            showView('quiz-creator-view');
+        });
 
-        async function loadPublicPlantData(plantId) {
-            showView('visitor-plant-view');
-            const contentDiv = document.getElementById('visitor-content');
-            contentDiv.innerHTML = `<div class="loader mx-auto"></div>`;
+        cancelQuizCreationBtn.addEventListener('click', () => {
+            showView('teacher-dashboard-view');
+        });
 
-            try {
-                const plantRef = doc(db, "artifacts", appId, "public", "data", "public_plants", plantId);
-                const docSnap = await getDoc(plantRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    const plantingDate = data.plantingDate ? new Date(data.plantingDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-                    const lastHarvestDate = data.lastHarvestDate ? new Date(data.lastHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-
-                    let html = `
-                        <h1 class="text-3xl font-bold text-center text-marrom-terra dark:text-dark-text">${data.plantName || 'Planta sem nome'}</h1>
-                        <p class="text-center text-gray-500 dark:text-dark-text-secondary italic mb-4">${data.plantScientificName || ''}</p>
-                    `;
-                    
-                    if (data.photoURL) {
-                        html += `<img src="${data.photoURL}" alt="Foto da ${data.plantName}" class="w-full h-auto max-h-80 object-cover rounded-lg shadow-md mb-6">`;
-                    }
-
-                    html += `
-                        <div class="bg-gray-100 dark:bg-dark-border/30 p-4 rounded-lg mb-4">
-                            <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-2">Descrição</h3>
-                            <p class="text-sm dark:text-dark-text-secondary">${data.plantDescription || 'Nenhuma descrição fornecida.'}</p>
-                        </div>
-                        <div class="bg-gray-100 dark:bg-dark-border/30 p-4 rounded-lg mb-6">
-                            <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-2">Possíveis Usos</h3>
-                            <p class="text-sm dark:text-dark-text-secondary">${data.plantUses || 'Nenhum uso informado.'}</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Responsável pela última coleta:</strong> ${data.studentName || 'N/A'}</div>
-                            <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Altura da Planta:</strong> ${data.plantHeight || '0'} cm</div>
-                            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Data de Plantio:</strong> ${plantingDate}</div>
-                            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Tipo de Solo:</strong> ${data.soilType || 'N/A'}</div>
-                            <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Última Colheita:</strong> ${lastHarvestDate}</div>
-                            <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg dark:text-dark-text-secondary"><strong>Peso Colhido:</strong> ${data.harvestWeight || '0'} g</div>
-                        </div>
-                    `;
-                    contentDiv.innerHTML = html;
-                } else {
-                    contentDiv.innerHTML = `<h1 class="text-2xl font-bold text-center text-red-600">Planta não encontrada</h1><p class="text-center dark:text-dark-text-secondary">O código da planta na URL pode ser inválido.</p>`;
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados públicos da planta:", error);
-                contentDiv.innerHTML = `<h1 class="text-2xl font-bold text-center text-red-600">Erro ao carregar dados</h1><p class="text-center dark:text-dark-text-secondary">Houve um problema ao buscar as informações.</p>`;
-            }
-        }
-
-        // --- PAINEL DO PROFESSOR ---
-        async function loadTeacherInitialData() {
-            const usersQuery = query(collection(db, "users"), where("role", "==", "aluno"));
-            const usersSnapshot = await getDocs(usersQuery);
-            allUsersCache = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            listenForCollections();
-        }
-
-        function listenForCollections() {
-            const tableBody = document.getElementById('students-with-collections-table-body');
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loader mx-auto"></div></td></tr>`;
+        function addQuestionToDOM(data = {}) {
+            questionCounter++;
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'p-4 border dark:border-dark-border rounded-lg space-y-3 bg-gray-50 dark:bg-dark-bg';
+            const questionId = `question_${questionCounter}`;
             
-            const q = query(collection(db, "plant_collections"), orderBy('collectedAt', 'desc'));
-            
-            if(unsubscribeFromCollections) unsubscribeFromCollections();
-
-            unsubscribeFromCollections = onSnapshot(q, (querySnapshot) => {
-                allCollectionsCache = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderStudentsWithCollectionsTable();
-            }, (error) => {
-                 console.error("Error fetching collections:", error);
-                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Erro ao carregar dados.</td></tr>`;
-            });
-        }
-
-        function renderStudentsWithCollectionsTable() {
-            const tableBody = document.getElementById('students-with-collections-table-body');
-            
-            const studentsData = {};
-            allCollectionsCache.forEach(collection => {
-                if (!studentsData[collection.studentId]) {
-                    const studentInfo = allUsersCache.find(u => u.id === collection.studentId);
-                    studentsData[collection.studentId] = {
-                        studentId: collection.studentId,
-                        studentName: collection.studentName,
-                        turma: studentInfo ? studentInfo.turma : 'N/A',
-                        collectionCount: 0,
-                        lastUpdate: 0
-                    };
-                }
-                studentsData[collection.studentId].collectionCount++;
-                if (collection.collectedAt.seconds > studentsData[collection.studentId].lastUpdate) {
-                    studentsData[collection.studentId].lastUpdate = collection.collectedAt.seconds;
-                }
-            });
-
-            let studentsArray = Object.values(studentsData);
-
-            const filterTurma = document.getElementById('filter-turma').value;
-            const filterDate = document.getElementById('filter-date').value;
-            const filterPlant = document.getElementById('filter-plant').value.toLowerCase();
-
-            let filteredStudents = studentsArray.filter(student => {
-                const turmaMatch = (filterTurma === 'todas') || (student.turma == filterTurma);
-                
-                const studentCollections = allCollectionsCache.filter(c => c.studentId === student.studentId);
-                const dateMatch = !filterDate || studentCollections.some(c => new Date(c.collectedAt.seconds * 1000).toISOString().split('T')[0] === filterDate);
-                const plantMatch = !filterPlant || studentCollections.some(c => c.plantName.toLowerCase().includes(filterPlant) || (c.plantId && c.plantId.toLowerCase().includes(filterPlant)));
-
-                return turmaMatch && dateMatch && plantMatch;
-            });
-
-            if (filteredStudents.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500 dark:text-dark-text-secondary">Nenhum aluno com coletas encontradas para os filtros aplicados.</td></tr>`;
-                return;
-            }
-            tableBody.innerHTML = '';
-            filteredStudents.forEach(data => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b dark:border-dark-border hover:bg-sky-50 dark:hover:bg-dark-card';
-                tr.innerHTML = `
-                    <td class="px-4 py-3 font-semibold">${data.studentName}</td>
-                    <td class="px-4 py-3">${data.turma}º Ano</td>
-                    <td class="px-4 py-3">${data.collectionCount}</td>
-                    <td class="px-4 py-3">${new Date(data.lastUpdate * 1000).toLocaleDateString('pt-BR')}</td>
-                    <td class="px-4 py-3">
-                        <button data-student-id="${data.studentId}" class="view-student-collections-btn text-sm bg-azul-ceu/50 dark:bg-azul-ceu/20 text-marrom-terra dark:text-dark-text font-bold py-1 px-3 rounded-md hover:bg-azul-ceu dark:hover:bg-azul-ceu/40">Ver Coletas</button>
-                    </td>
+            let optionsHtml = '';
+            for (let i = 0; i < 4; i++) {
+                optionsHtml += `
+                    <div class="flex items-center">
+                        <input type="radio" name="correct_answer_${questionId}" value="${i}" class="mr-2 text-verde-campo focus:ring-verde-campo" ${data.correctAnswerIndex === i ? 'checked' : ''} required>
+                        <input type="text" class="option-text w-full p-2 border rounded-md text-sm dark:bg-dark-card dark:border-dark-border dark:text-dark-text" placeholder="Opção ${i + 1}" value="${data.options?.[i] || ''}" required>
+                    </div>
                 `;
-                tableBody.appendChild(tr);
-            });
+            }
 
-            tableBody.querySelectorAll('.view-student-collections-btn').forEach(btn => {
-                btn.addEventListener('click', () => showStudentCollectionsModal(btn.dataset.studentId));
+            questionBlock.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-marrom-terra dark:text-dark-text-secondary">Pergunta ${questionCounter}</label>
+                    <button type="button" class="remove-question-btn text-red-500 text-xs font-bold">Remover</button>
+                </div>
+                <textarea class="question-text w-full p-2 border rounded-md dark:bg-dark-card dark:border-dark-border dark:text-dark-text" placeholder="Digite a pergunta..." required>${data.questionText || ''}</textarea>
+                <div>
+                    <label for="question-image-upload-${questionId}" class="block text-xs font-medium text-marrom-terra dark:text-dark-text-secondary">Imagem da Pergunta (Opcional)</label>
+                    <input id="question-image-upload-${questionId}" type="file" class="question-image-upload mt-1 w-full text-sm text-marrom-terra dark:text-dark-text-secondary file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/20 file:text-verde-campo hover:file:bg-verde-campo/30"/>
+                    <input type="hidden" class="question-image-url-hidden" value="${data.imageUrl || ''}">
+                    <p class="question-image-status text-xs mt-1 text-gray-500"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">${optionsHtml}</div>
+            `;
+            questionsContainer.appendChild(questionBlock);
+            questionBlock.querySelector('.remove-question-btn').addEventListener('click', () => {
+                questionBlock.remove();
+                let tempCounter = 0;
+                questionsContainer.querySelectorAll('.p-4').forEach(block => {
+                    tempCounter++;
+                    block.querySelector('label').textContent = `Pergunta ${tempCounter}`;
+                });
+                questionCounter = tempCounter;
             });
         }
 
-        document.getElementById('filter-btn').addEventListener('click', renderStudentsWithCollectionsTable);
-        document.getElementById('clear-filter-btn').addEventListener('click', () => {
-            document.getElementById('filter-turma').value = 'todas';
-            document.getElementById('filter-date').value = '';
-            document.getElementById('filter-plant').value = '';
-            renderStudentsWithCollectionsTable();
-        });
-        
-        // --- LÓGICA DO ALUNO (FORMULÁRIO) ---
-        const plantIdInput = document.getElementById('plantId');
-        plantIdInput.addEventListener('blur', async () => {
-            const plantId = plantIdInput.value.trim().toUpperCase();
-            const statusDiv = document.getElementById('plant-id-status');
-            if (!plantId) {
-                statusDiv.textContent = '';
+        addQuestionBtn.addEventListener('click', () => addQuestionToDOM());
+
+        function resetCreatorForm() {
+            createQuizForm.reset();
+            document.getElementById('quiz-id').value = '';
+            document.getElementById('creator-title').textContent = 'Criar Novo Quiz';
+            questionsContainer.innerHTML = '';
+            questionCounter = 0;
+            addQuestionToDOM();
+            studentListContainer.classList.add('hidden');
+        }
+
+        async function uploadImage(file, path) {
+            const storageRef = ref(storage, path);
+            await uploadBytes(storageRef, file);
+            return await getDownloadURL(storageRef);
+        }
+
+        createQuizForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveBtn = document.getElementById('save-quiz-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Salvando...';
+
+            let quizId = document.getElementById('quiz-id').value;
+            const isEditing = !!quizId;
+            const userId = auth.currentUser.uid;
+
+            if (!userId) {
+                showNotification("Usuário não autenticado. Por favor, faça login novamente.");
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Salvar Quiz';
                 return;
             }
 
-            statusDiv.textContent = 'Buscando dados anteriores...';
-            statusDiv.style.color = 'gray';
-
-            const q = query(
-                collection(db, "plant_collections"),
-                where("plantId", "==", plantId)
-            );
+            if (!isEditing) {
+                const newQuizRef = doc(collection(db, 'quizzes'));
+                quizId = newQuizRef.id;
+            }
 
             try {
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) {
-                    const collections = querySnapshot.docs.map(doc => doc.data());
-                    collections.sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
-                    const lastData = collections[0];
-                    
-                    Object.keys(lastData).forEach(key => {
-                        const input = document.getElementById(key);
-                        if(input && key !== 'plantId') {
-                            input.value = lastData[key] || '';
-                        }
-                    });
-                    statusDiv.textContent = 'Dados da última coleta carregados.';
-                    statusDiv.style.color = 'green';
-                } else {
-                    statusDiv.textContent = 'Nenhuma coleta anterior encontrada. Preencha os dados.';
-                    statusDiv.style.color = 'orange';
-                    const currentPlantId = document.getElementById('plantId').value;
-                    document.getElementById('collection-form').reset();
-                    document.getElementById('plantId').value = currentPlantId;
+                const iconUploadInput = document.getElementById('quiz-icon-upload');
+                let iconUrl = document.getElementById('quiz-icon-url-hidden').value;
+                if (iconUploadInput.files[0]) {
+                    const statusP = document.getElementById('quiz-icon-status');
+                    statusP.textContent = 'Enviando ícone...';
+                    iconUrl = await uploadImage(iconUploadInput.files[0], `quiz_images/${userId}/${quizId}/icon`);
+                    statusP.textContent = 'Ícone enviado!';
+                } else if (!iconUrl && !isEditing) {
+                    throw new Error("O ícone do quiz é obrigatório.");
                 }
+
+                const questions = [];
+                let formIsValid = true;
+                const questionBlocks = Array.from(questionsContainer.querySelectorAll('.p-4'));
+
+                for (let i = 0; i < questionBlocks.length; i++) {
+                    const block = questionBlocks[i];
+                    const questionText = block.querySelector('.question-text').value;
+                    if (!questionText) formIsValid = false;
+
+                    const options = Array.from(block.querySelectorAll('.option-text')).map(input => {
+                        if(!input.value) formIsValid = false;
+                        return input.value;
+                    });
+                    const correctAnswerRadio = block.querySelector('input[type="radio"]:checked');
+                    if(!correctAnswerRadio) formIsValid = false;
+                    const correctAnswerIndex = parseInt(correctAnswerRadio?.value);
+
+                    let imageUrl = block.querySelector('.question-image-url-hidden').value;
+                    const imageUploadInput = block.querySelector('.question-image-upload');
+                    if (imageUploadInput.files[0]) {
+                        const statusP = block.querySelector('.question-image-status');
+                        statusP.textContent = 'Enviando imagem...';
+                        imageUrl = await uploadImage(imageUploadInput.files[0], `quiz_images/${userId}/${quizId}/question_${i}`);
+                        statusP.textContent = 'Imagem enviada!';
+                    }
+                    
+                    questions.push({ questionText, options, correctAnswerIndex, imageUrl: imageUrl || null });
+                }
+
+                if (!formIsValid || questions.length === 0) {
+                    throw new Error("Preencha todos os campos de todas as perguntas antes de salvar.");
+                }
+
+                const selectedTurma = quizTurmaSelect.value;
+                let assignedTo = [];
+                if (selectedTurma === 'todos') {
+                    assignedTo = allStudentsCache.map(student => student.id);
+                } else {
+                    const selectedStudentCheckboxes = studentListDiv.querySelectorAll('input.student-checkbox:checked');
+                    assignedTo = Array.from(selectedStudentCheckboxes).map(cb => cb.value);
+                }
+
+                if (assignedTo.length === 0) {
+                    throw new Error('Selecione pelo menos um aluno ou "Todas as Turmas".');
+                }
+
+                const quizData = {
+                    title: document.getElementById('quiz-title').value,
+                    description: document.getElementById('quiz-description').value,
+                    xp: parseInt(document.getElementById('quiz-xp').value),
+                    iconUrl: iconUrl,
+                    availableFrom: Timestamp.fromDate(new Date(document.getElementById('quiz-available-from').value)),
+                    availableUntil: Timestamp.fromDate(new Date(document.getElementById('quiz-available-until').value)),
+                    turma: selectedTurma,
+                    assignedTo: assignedTo,
+                    questions: questions,
+                    authorId: userId,
+                };
+
+                const quizRef = doc(db, 'quizzes', quizId);
+                if (isEditing) {
+                    await updateDoc(quizRef, quizData);
+                    showNotification("Quiz atualizado com sucesso!");
+                } else {
+                    quizData.createdAt = serverTimestamp();
+                    await writeBatch(db).set(quizRef, quizData).commit();
+                    showNotification("Quiz criado com sucesso!");
+                }
+
+                showView('teacher-dashboard-view');
+                fetchAndDisplayTeacherQuizzes();
+
             } catch (error) {
-                console.error("Firebase query failed:", error);
-                statusDiv.textContent = 'Erro ao buscar dados. Tente novamente.';
-                statusDiv.style.color = 'red';
+                console.error("Erro ao salvar quiz:", error);
+                showNotification(error.message || "Falha ao salvar o quiz.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Salvar Quiz';
             }
         });
 
-        document.getElementById('plantPhoto').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            const preview = document.getElementById('photo-preview');
-            if (file) {
-                preview.src = URL.createObjectURL(file);
-                preview.classList.remove('hidden');
-            } else {
-                preview.classList.add('hidden');
+        function getQuizStatus(quiz) {
+            const now = new Date();
+            const from = quiz.availableFrom.toDate();
+            const until = quiz.availableUntil.toDate();
+            if (now < from) return 'Agendado';
+            if (now >= from && now <= until) return 'Ativo';
+            return 'Encerrado';
+        }
+
+        async function fetchAndDisplayTeacherQuizzes() {
+            const list = document.getElementById('quizzes-list-teacher');
+            list.innerHTML = `<div class="loader mx-auto col-span-full"></div>`;
+            const q = query(collection(db, 'quizzes'), where('authorId', '==', currentUserProfile.id));
+            const querySnapshot = await getDocs(q);
+            
+            allQuizzesCache = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allQuizzesCache.sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+
+            displayFilteredQuizzes();
+        }
+
+        function displayFilteredQuizzes() {
+            const list = document.getElementById('quizzes-list-teacher');
+            
+            const filterTitle = document.getElementById('filter-quiz-title').value.toLowerCase();
+            const filterStatus = document.getElementById('filter-quiz-status').value;
+            const filterTurma = document.getElementById('filter-quiz-turma').value;
+
+            const filteredQuizzes = allQuizzesCache.filter(quiz => {
+                const titleMatch = quiz.title.toLowerCase().includes(filterTitle);
+                const statusMatch = filterStatus === 'todos' || getQuizStatus(quiz) === filterStatus;
+                const turmaMatch = filterTurma === 'todos' || quiz.turma == filterTurma;
+                return titleMatch && statusMatch && turmaMatch;
+            });
+
+            if (filteredQuizzes.length === 0) {
+                list.innerHTML = `<p class="text-lg text-center text-marrom-terra/70 dark:text-dark-text-secondary col-span-full">Nenhum quiz encontrado para os filtros aplicados.</p>`;
+                return;
             }
-        });
 
-        document.getElementById('collection-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const saveBtn = document.getElementById('save-collection-btn');
-            saveBtn.disabled = true; saveBtn.textContent = 'Salvando...';
+            list.innerHTML = '';
+            filteredQuizzes.forEach(quiz => {
+                const card = document.createElement('div');
+                card.dataset.id = quiz.id;
+                
+                const turmaText = quiz.turma === 'todos' ? 'Todas as Turmas' : `${quiz.turma}º Ano`;
+                let targetText = turmaText;
+                if (quiz.turma !== 'todos' && Array.isArray(quiz.assignedTo)) {
+                    const totalInClass = allStudentsCache.filter(s => s.turma == quiz.turma).length;
+                    if (quiz.assignedTo.length < totalInClass && totalInClass > 0) {
+                        targetText = `${turmaText} (${quiz.assignedTo.length}/${totalInClass})`;
+                    }
+                }
+                
+                const status = getQuizStatus(quiz);
+                let statusText, statusColor, dateText, dateBgColor, dateTextColor;
+                const fromDate = quiz.availableFrom.toDate();
+                const untilDate = quiz.availableUntil.toDate();
 
-            const collectionData = {
-                studentId: currentUserProfile.id,
-                studentName: currentUserProfile.name,
-                turma: currentUserProfile.turma,
-                collectedAt: serverTimestamp(),
-                photoURL: null,
-                plantId: document.getElementById('plantId').value.trim().toUpperCase(),
-                plantName: document.getElementById('plantName').value.trim(),
-                plantScientificName: document.getElementById('plantScientificName').value.trim(),
-                plantDescription: document.getElementById('plantDescription').value,
-                plantUses: document.getElementById('plantUses').value,
-                plantingDate: document.getElementById('plantingDate').value,
-                plantHeight: document.getElementById('plantHeight').value,
-                branchCount: document.getElementById('branchCount').value,
-                flowerCount: document.getElementById('flowerCount').value,
-                fruitCount: document.getElementById('fruitCount').value,
-                lastHarvestDate: document.getElementById('lastHarvestDate').value,
-                harvestWeight: document.getElementById('harvestWeight').value,
-                nextHarvestDate: document.getElementById('nextHarvestDate').value,
-                sunExposure: document.getElementById('sunExposure').value,
-                waterAmount: document.getElementById('waterAmount').value,
-                soilType: document.getElementById('soilType').value,
-                soilMoisture: document.getElementById('soilMoisture').value,
-                fertilizerType: document.getElementById('fertilizerType').value,
-                needsFertilizing: document.getElementById('needsFertilizing').value,
-                hasPests: document.getElementById('hasPests').value,
-                hasWeeds: document.getElementById('hasWeeds').value,
-                hasDamagedLeaves: document.getElementById('hasDamagedLeaves').value,
-                leafColor: document.getElementById('leafColor').value,
-                generalObservations: document.getElementById('generalObservations').value,
+                if (status === 'Agendado') {
+                    statusText = 'Agendado';
+                    statusColor = 'bg-blue-500';
+                    dateBgColor = 'bg-blue-100 dark:bg-blue-900/30';
+                    dateTextColor = 'text-blue-700 dark:text-blue-300';
+                    dateText = `Abre em: ${fromDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                } else if (status === 'Ativo') {
+                    statusText = 'Ativo';
+                    statusColor = 'bg-verde-campo';
+                    dateBgColor = 'bg-green-100 dark:bg-green-900/30';
+                    dateTextColor = 'text-green-700 dark:text-green-300';
+                    dateText = `Encerra em: ${untilDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                } else { // Encerrado
+                    statusText = 'Encerrado';
+                    statusColor = 'bg-red-600';
+                    dateBgColor = 'bg-red-100 dark:bg-red-900/30';
+                    dateTextColor = 'text-red-700 dark:text-red-300';
+                    dateText = `Fechou em: ${untilDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                }
+                
+                card.className = 'quiz-card relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1 cursor-pointer';
+
+                card.innerHTML = `
+                    <div class="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold text-white ${statusColor} rounded-full shadow-md">
+                        ${statusText}
+                    </div>
+                    
+                    <div class="flex flex-col h-full items-center justify-center pt-4">
+                        <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
+                        
+                        <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
+                        
+                        <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${targetText}</p>
+                        
+                        <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
+                        
+                        <div class="flex-grow"></div>
+                        
+                        <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
+                           <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            list.addEventListener('click', (e) => {
+                const card = e.target.closest('.quiz-card');
+                if (card) {
+                    showTeacherQuizDetailsModal(card.dataset.id);
+                }
+            });
+        }
+        
+        function showTeacherQuizDetailsModal(quizId) {
+            const quiz = allQuizzesCache.find(q => q.id === quizId);
+            if (!quiz) return;
+
+            const modal = document.getElementById('teacher-quiz-details-modal');
+            const header = document.getElementById('teacher-quiz-modal-header');
+            const content = document.getElementById('teacher-quiz-modal-content');
+            const actions = document.getElementById('teacher-quiz-modal-actions');
+
+            header.innerHTML = `
+                <img src="${quiz.iconUrl}" class="w-12 h-12 rounded-lg object-cover" onerror="this.src='https://placehold.co/48x48/E2E8F0/4A5568?text=Icone'"/>
+                <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text">${quiz.title}</h2>
+            `;
+            
+            const fromDate = quiz.availableFrom.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const untilDate = quiz.availableUntil.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const turmaText = quiz.turma === 'todos' ? 'Todas as Turmas' : `${quiz.turma}º Ano`;
+
+            content.innerHTML = `
+                <div class="bg-gray-100 dark:bg-dark-border/30 p-3 rounded-lg">
+                    <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-1">Descrição</h4>
+                    <p>${quiz.description || 'Nenhuma descrição fornecida.'}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Status:</strong> ${getQuizStatus(quiz)}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>XP:</strong> ${quiz.xp}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Questões:</strong> ${quiz.questions.length}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Para:</strong> ${turmaText}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Disponível de:</strong> ${fromDate}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Disponível até:</strong> ${untilDate}</div>
+                </div>
+            `;
+
+            actions.innerHTML = `
+                <button id="modal-view-responses-btn" class="bg-azul-ceu text-white font-bold py-2 px-4 rounded-lg hover:bg-azul-ceu/90">Ver Respostas</button>
+                <button id="modal-edit-btn" class="bg-verde-campo text-white font-bold py-2 px-4 rounded-lg hover:bg-verde-campo/90">Editar</button>
+                <button id="modal-delete-btn" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Excluir</button>
+            `;
+            
+            document.getElementById('modal-view-responses-btn').onclick = () => {
+                showQuizResponsesModal(quizId, quiz.title);
             };
 
-            if (!collectionData.plantId || !collectionData.plantName) {
-                showNotification("O Código e o Nome da Planta são obrigatórios.");
-                saveBtn.disabled = false; saveBtn.textContent = 'Salvar Coleta';
-                return;
-            }
+            document.getElementById('modal-delete-btn').onclick = async () => {
+                if (confirm('Tem certeza que deseja excluir este quiz? Esta ação não pode ser desfeita.')) {
+                    try {
+                        await deleteDoc(doc(db, 'quizzes', quizId));
+                        showNotification("Quiz excluído com sucesso.");
+                        modal.style.display = 'none';
+                        fetchAndDisplayTeacherQuizzes();
+                    } catch (error) { showNotification("Falha ao excluir o quiz."); }
+                }
+            };
             
-            try {
-                const file = document.getElementById('plantPhoto').files[0];
-                const publicPlantRef = doc(db, "artifacts", appId, "public", "data", "public_plants", collectionData.plantId);
+            document.getElementById('modal-edit-btn').onclick = () => {
+                 modal.style.display = 'none';
+                 handleEditQuiz(quizId);
+            };
 
-                if (file) {
-                    showNotification("Enviando foto...");
-                    const storageRef = ref(storage, `plant_photos/${collectionData.plantId}/${Date.now()}_${file.name}`);
-                    const uploadResult = await uploadBytes(storageRef, file);
-                    collectionData.photoURL = await getDownloadURL(uploadResult.ref);
-                } else {
-                    const docSnap = await getDoc(publicPlantRef);
-                    if (docSnap.exists() && docSnap.data().photoURL) {
-                        collectionData.photoURL = docSnap.data().photoURL;
-                    }
+            modal.style.display = 'flex';
+        }
+        
+        document.getElementById('teacher-quiz-modal-close-btn').addEventListener('click', () => {
+            document.getElementById('teacher-quiz-details-modal').style.display = 'none';
+        });
+        
+        async function showQuizResponsesModal(quizId, quizTitle) {
+            const modal = document.getElementById('quiz-responses-modal');
+            const titleEl = document.getElementById('quiz-responses-modal-title');
+            const listBody = document.getElementById('quiz-responses-list');
+            
+            titleEl.textContent = `Respostas: ${quizTitle}`;
+            listBody.innerHTML = `<tr><td colspan="4" class="text-center p-4"><div class="loader mx-auto"></div></td></tr>`;
+            modal.style.display = 'flex';
+
+            try {
+                const attemptsQuery = query(collection(db, 'quiz_attempts'), where('quizId', '==', quizId));
+                const attemptsSnapshot = await getDocs(attemptsQuery);
+
+                if (attemptsSnapshot.empty) {
+                    listBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500 dark:text-dark-text-secondary">Nenhum aluno respondeu a este quiz ainda.</td></tr>`;
+                    return;
                 }
 
-                await addDoc(collection(db, "plant_collections"), collectionData);
+                listBody.innerHTML = '';
+                const attempts = attemptsSnapshot.docs.map(d => d.data());
                 
-                await setDoc(publicPlantRef, {
-                    plantId: collectionData.plantId,
-                    plantName: collectionData.plantName,
-                    plantScientificName: collectionData.plantScientificName,
-                    plantDescription: collectionData.plantDescription,
-                    plantUses: collectionData.plantUses,
-                    plantingDate: collectionData.plantingDate,
-                    plantHeight: collectionData.plantHeight,
-                    soilType: collectionData.soilType,
-                    studentName: collectionData.studentName,
-                    lastHarvestDate: collectionData.lastHarvestDate,
-                    harvestWeight: collectionData.harvestWeight,
-                    photoURL: collectionData.photoURL
-                }, { merge: true });
+                attempts.forEach(attempt => {
+                    const student = allStudentsCache.find(s => s.id === attempt.studentId);
+                    const studentName = student ? student.name : 'Aluno desconhecido';
+                    const completedDate = attempt.completedAt.toDate().toLocaleString('pt-BR');
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b dark:border-dark-border hover:bg-sky-50 dark:hover:bg-dark-card';
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 font-semibold">${studentName}</td>
+                        <td class="px-4 py-3">${attempt.score} / ${attempt.totalQuestions}</td>
+                        <td class="px-4 py-3 text-amarelo-sol font-bold">+${attempt.xpEarned} XP</td>
+                        <td class="px-4 py-3">${completedDate}</td>
+                    `;
+                    listBody.appendChild(tr);
+                });
 
-                showNotification("Coleta salva com sucesso!");
-                document.getElementById('collection-form').reset();
-                document.getElementById('photo-preview').classList.add('hidden');
-                document.getElementById('plant-id-status').textContent = '';
             } catch (error) {
-                console.error("Erro ao salvar coleta:", error);
-                showNotification("Falha ao salvar a coleta de dados.");
-            } finally {
-                saveBtn.disabled = false; saveBtn.textContent = 'Salvar Coleta';
+                console.error("Erro ao buscar respostas:", error);
+                listBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500">Erro ao carregar as respostas.</td></tr>`;
+            }
+        }
+
+        document.getElementById('quiz-responses-modal-close-btn').addEventListener('click', () => {
+            document.getElementById('quiz-responses-modal').style.display = 'none';
+        });
+
+
+        async function handleEditQuiz(quizId) {
+            const quizDoc = await getDoc(doc(db, 'quizzes', quizId));
+            if(quizDoc.exists()) {
+                const quizData = quizDoc.data();
+                resetCreatorForm();
+                document.getElementById('creator-title').textContent = 'Editar Quiz';
+                document.getElementById('quiz-id').value = quizId;
+                document.getElementById('quiz-title').value = quizData.title;
+                document.getElementById('quiz-description').value = quizData.description || '';
+                document.getElementById('quiz-xp').value = quizData.xp;
+                document.getElementById('quiz-icon-url-hidden').value = quizData.iconUrl;
+                
+                const fromDate = quizData.availableFrom.toDate().toISOString().slice(0, 16);
+                const untilDate = quizData.availableUntil.toDate().toISOString().slice(0, 16);
+                document.getElementById('quiz-available-from').value = fromDate;
+                document.getElementById('quiz-available-until').value = untilDate;
+                
+                document.getElementById('quiz-turma-select').value = quizData.turma;
+                
+                questionsContainer.innerHTML = '';
+                questionCounter = 0;
+                quizData.questions.forEach(q => addQuestionToDOM(q));
+
+                if (quizData.turma !== 'todos') {
+                    quizTurmaSelect.dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        quizData.assignedTo.forEach(studentId => {
+                            const checkbox = studentListDiv.querySelector(`input[value="${studentId}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }, 100);
+                }
+
+                showView('quiz-creator-view');
+            }
+        }
+
+        function setupStudentSelector() {
+             quizTurmaSelect.addEventListener('change', (e) => {
+                const selectedTurma = e.target.value;
+                studentListDiv.innerHTML = ''; 
+
+                if (!selectedTurma || selectedTurma === 'todos') {
+                    studentListContainer.classList.add('hidden');
+                    return;
+                }
+
+                const studentsInClass = allStudentsCache.filter(s => s.turma == selectedTurma);
+                
+                if (studentsInClass.length > 0) {
+                    const selectAllLabel = document.createElement('label');
+                    selectAllLabel.className = 'flex items-center font-semibold pb-2 border-b dark:border-dark-border mb-2 text-marrom-terra dark:text-dark-text-secondary';
+                    selectAllLabel.innerHTML = `<input type="checkbox" class="select-all-students rounded mr-2 text-verde-campo focus:ring-verde-campo"> Selecionar Todos`;
+                    studentListDiv.appendChild(selectAllLabel);
+
+                    studentsInClass.forEach(student => {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center text-marrom-terra dark:text-dark-text-secondary';
+                        label.innerHTML = `<input type="checkbox" name="student_checkbox" value="${student.id}" class="student-checkbox rounded mr-2 text-verde-campo focus:ring-verde-campo"> ${student.name}`;
+                        studentListDiv.appendChild(label);
+                    });
+
+                    studentListDiv.querySelector('.select-all-students').addEventListener('change', (event) => {
+                        const isChecked = event.target.checked;
+                        studentListDiv.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                            checkbox.checked = isChecked;
+                        });
+                    });
+
+                    studentListContainer.classList.remove('hidden');
+                } else {
+                    studentListDiv.innerHTML = `<p class="text-xs text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aluno encontrado para esta turma.</p>`;
+                    studentListContainer.classList.remove('hidden');
+                }
+            });
+        }
+
+        async function loadStudentQuizzes() {
+            const list = document.getElementById('quizzes-list-student');
+            list.innerHTML = `<div class="loader mx-auto col-span-full"></div>`;
+            
+            const now = new Date();
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const q = query(
+                collection(db, 'quizzes'), 
+                where('assignedTo', 'array-contains', currentUserProfile.id)
+            );
+            const quizzesSnapshot = await getDocs(q);
+            
+            const allAssignedQuizzes = quizzesSnapshot.docs
+                .map(d => ({id: d.id, ...d.data()}))
+                .filter(quiz => quiz.availableUntil.toDate() > sevenDaysAgo);
+
+            const attemptsQuery = query(collection(db, 'quiz_attempts'), where('studentId', '==', currentUserProfile.id));
+            const attemptsSnapshot = await getDocs(attemptsQuery);
+            const completedQuizIds = new Set(attemptsSnapshot.docs.map(d => d.data().quizId));
+
+            quizzesToShowCache = allAssignedQuizzes.filter(quiz => !completedQuizIds.has(quiz.id));
+            quizzesToShowCache.sort((a,b) => b.availableFrom.toDate() - a.availableFrom.toDate());
+
+
+            if (quizzesToShowCache.length === 0) {
+                list.innerHTML = `<p class="text-center text-marrom-terra/70 dark:text-dark-text-secondary md:col-span-2 lg:col-span-3">Nenhum quiz novo ou agendado para você no momento.</p>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            quizzesToShowCache.forEach(quiz => {
+                const card = document.createElement('div');
+                card.dataset.id = quiz.id;
+                const from = quiz.availableFrom.toDate();
+                const until = quiz.availableUntil.toDate();
+                const status = getQuizStatus({ availableFrom: quiz.availableFrom, availableUntil: quiz.availableUntil });
+
+                let cardClasses = 'quiz-card relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 ';
+                
+                if (status === 'Ativo') {
+                    cardClasses += 'hover:shadow-xl hover:transform hover:-translate-y-1 cursor-pointer is-available';
+                } else {
+                    cardClasses += 'opacity-60 cursor-not-allowed';
+                }
+                card.className = cardClasses;
+
+                let statusText, statusColor, dateText, dateBgColor, dateTextColor;
+                
+                if (status === 'Agendado') {
+                    statusText = 'Agendado';
+                    statusColor = 'bg-blue-500';
+                    dateBgColor = 'bg-blue-100 dark:bg-blue-900/30';
+                    dateTextColor = 'text-blue-700 dark:text-blue-300';
+                    dateText = `Abre em: ${from.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                } else if (status === 'Ativo') {
+                    statusText = 'Disponível';
+                    statusColor = 'bg-verde-campo';
+                    dateBgColor = 'bg-green-100 dark:bg-green-900/30';
+                    dateTextColor = 'text-green-700 dark:text-green-300';
+                    dateText = `Encerra em: ${until.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                } else { // Encerrado
+                    statusText = 'Encerrado';
+                    statusColor = 'bg-red-600';
+                    dateBgColor = 'bg-red-100 dark:bg-red-900/30';
+                    dateTextColor = 'text-red-700 dark:text-red-300';
+                    dateText = `Fechou em: ${until.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
+                }
+
+                card.innerHTML = `
+                    <div class="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold text-white ${statusColor} rounded-full shadow-md">
+                        ${statusText}
+                    </div>
+                    
+                    <div class="flex flex-col h-full items-center justify-center pt-4">
+                        <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
+                        
+                        <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
+                        
+                        <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
+                        
+                        <div class="flex-grow"></div>
+                        
+                        <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
+                           <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+            list.addEventListener('click', (e) => {
+                const card = e.target.closest('.quiz-card.is-available');
+                if(card) {
+                    showStudentQuizDetailsModal(card.dataset.id);
+                }
+            });
+        }
+        
+        function showStudentQuizDetailsModal(quizId) {
+            const quiz = quizzesToShowCache.find(q => q.id === quizId);
+            if (!quiz) return;
+
+            const modal = document.getElementById('student-quiz-details-modal');
+            const header = document.getElementById('student-quiz-modal-header');
+            const content = document.getElementById('student-quiz-modal-content');
+            const actions = document.getElementById('student-quiz-modal-actions');
+
+            header.innerHTML = `
+                <img src="${quiz.iconUrl}" class="w-12 h-12 rounded-lg object-cover" onerror="this.src='https://placehold.co/48x48/E2E8F0/4A5568?text=Icone'"/>
+                <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text">${quiz.title}</h2>
+            `;
+            
+            const fromDate = quiz.availableFrom.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const untilDate = quiz.availableUntil.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+
+            content.innerHTML = `
+                <div class="bg-gray-100 dark:bg-dark-border/30 p-3 rounded-lg">
+                    <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-1">Descrição</h4>
+                    <p>${quiz.description || 'Nenhuma descrição fornecida.'}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>XP:</strong> ${quiz.xp}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Questões:</strong> ${quiz.questions.length}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Disponível de:</strong> ${fromDate}</div>
+                    <div class="bg-gray-50 dark:bg-dark-border/20 p-2 rounded-md"><strong>Disponível até:</strong> ${untilDate}</div>
+                </div>
+            `;
+
+            actions.innerHTML = `
+                <button id="modal-start-quiz-btn" class="w-full bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Iniciar Quiz</button>
+            `;
+
+            document.getElementById('modal-start-quiz-btn').onclick = () => {
+                modal.style.display = 'none';
+                currentQuiz = quiz;
+                startQuiz();
+            };
+
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('student-quiz-modal-close-btn').addEventListener('click', () => {
+            document.getElementById('student-quiz-details-modal').style.display = 'none';
+        });
+
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            studentAnswers = [];
+            showView('quiz-taking-view');
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const questionImage = document.getElementById('question-image-display');
+
+            document.getElementById('quiz-title-taking').textContent = currentQuiz.title;
+            document.getElementById('question-counter').textContent = `Pergunta ${currentQuestionIndex + 1}/${currentQuiz.questions.length}`;
+            document.getElementById('question-text').textContent = question.questionText;
+            
+            if (question.imageUrl) {
+                questionImage.src = question.imageUrl;
+                questionImage.classList.remove('hidden');
+            } else {
+                questionImage.classList.add('hidden');
+            }
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'answer-option border-2 dark:border-dark-border rounded-lg p-4 cursor-pointer font-semibold text-marrom-terra dark:text-dark-text-secondary';
+                optionDiv.textContent = option;
+                optionDiv.dataset.index = index;
+                optionDiv.addEventListener('click', () => {
+                    optionsContainer.querySelectorAll('.answer-option').forEach(opt => opt.classList.remove('selected'));
+                    optionDiv.classList.add('selected');
+                });
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            const progress = ((currentQuestionIndex + 1) / currentQuiz.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
+
+            if (currentQuestionIndex === currentQuiz.questions.length - 1) {
+                document.getElementById('next-question-btn').textContent = 'Finalizar Quiz';
+            } else {
+                document.getElementById('next-question-btn').textContent = 'Próxima';
+            }
+        }
+
+        document.getElementById('next-question-btn').addEventListener('click', () => {
+            const selectedOption = document.querySelector('.answer-option.selected');
+            if (!selectedOption) {
+                showNotification("Por favor, selecione uma resposta.");
+                return;
+            }
+            studentAnswers.push(parseInt(selectedOption.dataset.index));
+
+            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            } else {
+                finishQuiz();
             }
         });
 
-        // --- MODAIS ---
+        async function finishQuiz() {
+            let score = 0;
+            currentQuiz.questions.forEach((q, index) => {
+                if (q.correctAnswerIndex === studentAnswers[index]) {
+                    score++;
+                }
+            });
+
+            const xpEarned = Math.round((score / currentQuiz.questions.length) * currentQuiz.xp);
+            
+            const batch = writeBatch(db);
+            const attemptRef = doc(collection(db, 'quiz_attempts'));
+            batch.set(attemptRef, {
+                studentId: currentUserProfile.id,
+                quizId: currentQuiz.id,
+                score: score,
+                totalQuestions: currentQuiz.questions.length,
+                xpEarned: xpEarned,
+                completedAt: serverTimestamp()
+            });
+            const userRef = doc(db, 'users', currentUserProfile.id);
+            batch.update(userRef, { xp: increment(xpEarned) });
+            const xpHistoryRef = doc(collection(userRef, 'xp_history'));
+            batch.set(xpHistoryRef, {
+                points: xpEarned,
+                reason: `Quiz: ${currentQuiz.title}`,
+                date: serverTimestamp()
+            });
+            
+            try {
+                await batch.commit();
+                document.getElementById('score-text').textContent = `Você acertou ${score} de ${currentQuiz.questions.length}!`;
+                document.getElementById('xp-earned-text').textContent = `+${xpEarned} XP`;
+                
+                document.getElementById('quiz-result-image').src = DEFAULT_COMPLETION_IMAGE_URL;
+
+                showView('quiz-results-view');
+            } catch (error) {
+                console.error("Erro ao finalizar quiz:", error);
+                showNotification("Houve um erro ao salvar seu resultado. Tente novamente.");
+            }
+        }
+
+        document.getElementById('back-to-dashboard-btn').addEventListener('click', () => {
+            showView('student-dashboard-view');
+            loadStudentQuizzes();
+        });
+
         function showNotification(message) {
+            const modal = document.getElementById('notification-modal');
             document.getElementById('notification-message').textContent = message;
-            document.getElementById('notification-modal').style.display = 'flex';
+            modal.style.display = 'flex';
         }
         document.getElementById('notification-ok-btn').addEventListener('click', () => {
             document.getElementById('notification-modal').style.display = 'none';
         });
-        
-        function showStudentCollectionsModal(studentId) {
-            const student = allUsersCache.find(u => u.id === studentId);
-            if (!student) return;
 
-            const modal = document.getElementById('student-collections-modal');
-            const modalTitle = document.getElementById('student-collections-modal-title');
-            const listBody = document.getElementById('student-collections-list');
+        function main() {
+            setupStudentSelector();
 
-            modalTitle.textContent = `Coletas de ${student.name}`;
-            listBody.innerHTML = '';
-
-            const studentCollections = allCollectionsCache
-                .filter(c => c.studentId === studentId)
-                .sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
-
-            if (studentCollections.length === 0) {
-                listBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500 dark:text-dark-text-secondary">Nenhuma coleta para este aluno.</td></tr>`;
-            } else {
-                studentCollections.forEach(data => {
-                    const date = new Date(data.collectedAt.seconds * 1000);
-                    const tr = document.createElement('tr');
-                    tr.className = 'border-b dark:border-dark-border hover:bg-sky-50 dark:hover:bg-dark-card';
-                    tr.innerHTML = `
-                        <td class="px-4 py-3">${date.toLocaleString('pt-BR')}</td>
-                        <td class="px-4 py-3 font-semibold">${data.plantName}</td>
-                        <td class="px-4 py-3 font-mono text-verde-campo">${data.plantId}</td>
-                        <td class="px-4 py-3">
-                            <button data-collection-id="${data.id}" class="view-collection-details-btn text-sm bg-azul-ceu/50 dark:bg-azul-ceu/20 text-marrom-terra dark:text-dark-text font-bold py-1 px-3 rounded-md hover:bg-azul-ceu dark:hover:bg-azul-ceu/40">Ver Detalhes</button>
-                        </td>
-                    `;
-                    listBody.appendChild(tr);
-                });
-            }
-
-            listBody.querySelectorAll('.view-collection-details-btn').forEach(btn => {
-                btn.addEventListener('click', () => showDetailsModal(btn.dataset.collectionId));
+            document.getElementById('filter-btn').addEventListener('click', displayFilteredQuizzes);
+            document.getElementById('clear-filter-btn').addEventListener('click', () => {
+                document.getElementById('filter-quiz-title').value = '';
+                document.getElementById('filter-quiz-status').value = 'todos';
+                document.getElementById('filter-quiz-turma').value = 'todos';
+                displayFilteredQuizzes();
             });
-            
-            modal.querySelector('#student-collections-modal-close-btn').addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
-            modal.style.display = 'flex';
         }
 
-        async function showDetailsModal(collectionId) {
-            const initialCollection = allCollectionsCache.find(c => c.id === collectionId);
-            if (!initialCollection) return;
-
-            const plantId = initialCollection.plantId;
-            const history = allCollectionsCache
-                .filter(c => c.plantId === plantId)
-                .sort((a, b) => b.collectedAt.seconds - a.collectedAt.seconds);
-
-            const modal = document.getElementById('details-modal');
-            const modalHeader = document.getElementById('details-modal-header');
-
-            let historyOptions = history.map(item => {
-                const date = new Date(item.collectedAt.seconds * 1000).toLocaleString('pt-BR');
-                const isSelected = item.id === collectionId ? 'selected' : '';
-                return `<option value="${item.id}" ${isSelected}>${date} - Por ${item.studentName}</option>`;
-            }).join('');
-
-            modalHeader.innerHTML = `
-                <div class="flex-grow">
-                    <h2 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Detalhes da Coleta</h2>
-                    <label for="history-select" class="text-sm font-medium text-gray-600 dark:text-dark-text-secondary mt-2 block">Ver histórico:</label>
-                    <select id="history-select" class="w-full md:w-auto text-sm font-normal mt-1 p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                        ${historyOptions}
-                    </select>
-                </div>
-                <button id="details-modal-close-btn" class="text-3xl hover:text-red-500 dark:text-dark-text-secondary dark:hover:text-white self-start ml-4">&times;</button>
-            `;
-            
-            renderModalContent(initialCollection);
-
-            modal.querySelector('#history-select').addEventListener('change', (e) => {
-                const selectedCollectionId = e.target.value;
-                const selectedData = history.find(c => c.id === selectedCollectionId);
-                if (selectedData) {
-                    renderModalContent(selectedData);
-                }
-            });
-            
-            modal.querySelector('#details-modal-close-btn').addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-            
-            modal.style.display = 'flex';
-        }
-        
-        function renderModalContent(data) {
-            const modalContent = document.getElementById('details-modal-content');
-
-            const collectedDate = data.collectedAt ? new Date(data.collectedAt.seconds * 1000).toLocaleDateString('pt-BR') : 'N/A';
-            const plantingDate = data.plantingDate ? new Date(data.plantingDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-            const lastHarvest = data.lastHarvestDate ? new Date(data.lastHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-            const nextHarvest = data.nextHarvestDate ? new Date(data.nextHarvestDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-
-            modalContent.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                    <div class="lg:col-span-3 bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Observações Gerais do Aluno:</strong><br>${data.generalObservations || 'Nenhuma'}</div>
-
-                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Data da Coleta:</strong> ${collectedDate}</div>
-                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nome Científico:</strong> ${data.plantScientificName || 'N/A'}</div>
-                    <div class="bg-gray-50 dark:bg-dark-border/20 p-3 rounded-md dark:text-dark-text-secondary"><strong>Usos Possíveis:</strong> ${data.plantUses || 'N/A'}</div>
-
-                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
-
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Altura:</strong> ${data.plantHeight || '0'} cm</div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Ramos/Brotos:</strong> ${data.branchCount || '0'}</div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Flores:</strong> ${data.flowerCount || '0'}</div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Nº de Frutos:</strong> ${data.fruitCount || '0'}</div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Peso da Colheita:</strong> ${data.harvestWeight || '0'} g</div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Cor das Folhas:</strong> ${data.leafColor || 'N/A'}</div>
-
-                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
-                    
-                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Data de Plantio:</strong> ${plantingDate}</div>
-                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Última Colheita:</strong> ${lastHarvest}</div>
-                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Próxima Colheita (Previsão):</strong> ${nextHarvest}</div>
-                    
-                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
-
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Exposição ao Sol:</strong> ${data.sunExposure || 'N/A'} horas/dia</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Água Diária:</strong> ${data.waterAmount || 'N/A'} ml</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Tipo de Solo:</strong> ${data.soilType || 'N/A'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Umidade do Solo:</strong> ${data.soilMoisture || 'N/A'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Adubo Utilizado:</strong> ${data.fertilizerType || 'Nenhum'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Precisou de Adubo?:</strong> ${data.needsFertilizing || 'Não'}</div>
-                    
-                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
-                    
-                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Pragas/Doenças?:</strong> ${data.hasPests || 'Não'}</div>
-                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Ervas Daninhas?:</strong> ${data.hasWeeds || 'Não'}</div>
-                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Folhas Danificadas?:</strong> ${data.hasDamagedLeaves || 'Não'}</div>
-                </div>
-                <div class="mt-4 p-3 rounded-md bg-gray-100 dark:bg-dark-border/20">
-                    <h4 class="font-bold dark:text-dark-text">Descrição da Planta</h4>
-                    <p class="text-sm dark:text-dark-text-secondary">${data.plantDescription || 'Nenhuma descrição fornecida.'}</p>
-                </div>
-            `;
-        }
+        main();
 
     </script>
 </body>
