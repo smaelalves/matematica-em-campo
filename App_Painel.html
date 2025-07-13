@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1a73e8">
+    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
 
@@ -462,7 +463,7 @@
             corporal_cinestesica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_bronze.png?alt=media&token=fbd36afd-aa46-41b4-b18c-98d9d2e8ac77', name: 'Corpo que Ensina (Bronze)'},
             corporal_cinestesica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_prata.png?alt=media&token=37010a46-6f38-4fab-ba96-fc8dedf5880a', name: 'Corpo que Ensina (Prata)'},
             corporal_cinestesica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_ouro.png?alt=media&token=15d86cef-ed37-4788-b43f-913e74e743d8', name: 'Corpo que Ensina (Ouro)'},
-            musical_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_bronze.png?alt=media&token=9cbab8ce-040c-4bbb-b79f-c943397f9c9b', name: 'Cantador do Saber (Bronze)'},
+            musical_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_bronze.png?alt=media&token=9cbab8ce-040c-4bbb-b79f-c943397f5c9b', name: 'Cantador do Saber (Bronze)'},
             musical_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_prata.png?alt=media&token=b25468d9-d0ea-4ffb-bed7-776dbf3d60a6', name: 'Cantador do Saber (Prata)'},
             musical_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_ouro.png?alt=media&token=205d6a7a-63a7-4dff-8334-636bb12b3ee1', name: 'Cantador do Saber (Ouro)'},
             interpessoal_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_bronze.png?alt=media&token=cceb140c-e9e9-4886-8ac2-a0cc932cd386', name: 'Companheiro da Terra (Bronze)'},
@@ -538,6 +539,8 @@
             const loginViewEl = document.getElementById('login-view');
             const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
             const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+            // [NOVO] Referência para a meta tag de cor do tema
+            const themeColorMeta = document.getElementById('theme-color-meta');
 
 
             function updateThemeVisuals(isDark) {
@@ -547,25 +550,30 @@
                     loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
                 }
             }
-
-function setTheme(isDark) {
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('color-theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('color-theme', 'light');
-    }
-    updateThemeVisuals(isDark);
-
-    // Atualiza a cor da barra do navegador
-    const metaThemeColor = document.querySelector("meta[name='theme-color']");
-    if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", isDark ? "#121212" : "#1a73e8");
-    }
-}
             
+            // [NOVO] Função para atualizar a cor da barra de título do navegador
+            function updateThemeColorMeta(isDark) {
+                if (themeColorMeta) {
+                    themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
+                }
+            }
+
+            // [MODIFICADO] Função de tema para incluir a atualização da meta tag
+            function setTheme(isDark) {
+                 if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+                updateThemeVisuals(isDark);
+                updateThemeColorMeta(isDark); // Atualiza a cor da barra de título
+            }
+            
+            // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
             updateThemeVisuals(document.documentElement.classList.contains('dark'));
+            updateThemeColorMeta(document.documentElement.classList.contains('dark'));
             
             themeToggleBtns.forEach(btn => {
                 if(btn) {
