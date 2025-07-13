@@ -9,11 +9,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
 
+
     <title>Quiz - Matemática em Campo</title>
     <!-- Fontes e Estilos Visuais -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC
@@ -78,7 +79,7 @@
         .answer-option.selected {
             background-color: #81D4FA; /* azul-ceu */
             border-color: #4CAF50; /* verde-campo */
-            color: #1e1e1e;
+            color: #8D6E63; /* marrom-terra */
         }
         .dark .answer-option.selected {
             background-color: #4CAF50;
@@ -95,39 +96,22 @@
             max-height: 200px;
             object-fit: contain;
         }
-        /* [REMOVIDO] aspect-ratio para permitir que o card se ajuste ao conteúdo */
+        /* Garante que o card tenha uma proporção quadrada e seja responsivo */
         .quiz-card {
-            min-height: 280px; /* Altura mínima para consistência */
-        }
-        /* Estilo para o container do background */
-        #background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -10;
-            background-size: cover;
-            background-position: center;
-            transition: background-image 0.5s ease-in-out;
+            aspect-ratio: 1 / 1.1;
         }
     </style>
 </head>
-<body class="font-sans transition-colors duration-300">
-
-    <div id="background-container"></div>
+<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
 
     <!-- VISÃO 0: CARREGAMENTO INICIAL -->
-    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
-        <div class="text-center">
-             <div class="loader mx-auto"></div>
-             <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando quiz...</p>
-        </div>
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
+        <div class="loader"></div>
     </div>
 
     <!-- VISÃO 1: LOGIN -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
-        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
+        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
                 <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Teste seus conhecimentos!</p>
@@ -137,11 +121,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
-                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
-                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
                     </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
@@ -159,8 +143,8 @@
     </div>
 
     <!-- VISÃO 2: PAINEL DO PROFESSOR (LISTA DE QUIZZES) -->
-    <div id="teacher-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
-        <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+    <div id="teacher-dashboard-view" class="view">
+        <header class="bg-white dark:bg-dark-card shadow-md">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel de Quizzes</h1>
                 <div class="flex items-center gap-4">
@@ -168,37 +152,107 @@
                         <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="V2.0 App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
-                    <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
         </header>
-        <main class="flex-grow px-4 sm:px-6 lg:px-8 py-10">
-            <div class="max-w-7xl mx-auto">
-                <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-lg mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-marrom-terra dark:text-dark-text">Filtrar Quizzes</h3>
-                        <button id="go-to-create-quiz-btn" class="bg-verde-campo text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-verde-campo/90 transition-all text-sm">
-                            + Novo Quiz
-                        </button>
+        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            
+            <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-marrom-terra dark:text-dark-text">Filtrar Quizzes</h3>
+                    <button id="go-to-create-quiz-btn" class="bg-verde-campo text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-verde-campo/90 transition-all text-sm">
+                        + Novo Quiz
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end pt-4 border-t dark:border-dark-border">
+                    <div>
+                        <label for="filter-quiz-title" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
+                        <input type="text" id="filter-quiz-title" placeholder="Pesquisar..." class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end pt-4 border-t dark:border-dark-border">
+                    <div>
+                        <label for="filter-quiz-status" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Status</label>
+                        <select id="filter-quiz-status" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <option value="todos">Todos</option>
+                            <option value="Agendado">Agendado</option>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Encerrado">Encerrado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-quiz-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
+                        <select id="filter-quiz-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <option value="todos">Todas as Turmas</option>
+                            <option value="6">6º Ano</option>
+                            <option value="7">7º Ano</option>
+                            <option value="8">8º Ano</option>
+                            <option value="9">9º Ano</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="filter-btn" class="w-full bg-azul-ceu/80 text-white font-bold py-2 px-4 rounded-md hover:bg-azul-ceu">Filtrar</button>
+                        <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="quizzes-list-teacher" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Cards de quizzes do professor serão preenchidos aqui -->
+            </div>
+        </main>
+    </div>
+
+    <!-- VISÃO 3: PROFESSOR CRIANDO/EDITANDO QUIZ -->
+    <div id="quiz-creator-view" class="view">
+        <main class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
+                <form id="create-quiz-form" class="space-y-6">
+                    <input type="hidden" id="quiz-id">
+                    <input type="hidden" id="quiz-icon-url-hidden">
+                    <h2 id="creator-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text mb-6">Criar Novo Quiz</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label for="filter-quiz-title" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
-                            <input type="text" id="filter-quiz-title" placeholder="Pesquisar..." class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <label for="quiz-title" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
+                            <input id="quiz-title" type="text" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
                         </div>
                         <div>
-                            <label for="filter-quiz-status" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Status</label>
-                            <select id="filter-quiz-status" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                <option value="todos">Todos</option>
-                                <option value="Agendado">Agendado</option>
-                                <option value="Ativo">Ativo</option>
-                                <option value="Encerrado">Encerrado</option>
-                            </select>
+                            <label for="quiz-xp" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pontos de XP pelo Quiz</label>
+                            <input id="quiz-xp" type="number" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="quiz-description" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição do Quiz</label>
+                        <textarea id="quiz-description" rows="3" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" placeholder="Explique o objetivo ou conteúdo do quiz..."></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="quiz-available-from" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Disponível de:</label>
+                            <input id="quiz-available-from" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
                         </div>
                         <div>
-                            <label for="filter-quiz-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
-                            <select id="filter-quiz-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <label for="quiz-available-until" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Até:</label>
+                            <input id="quiz-available-until" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="quiz-icon-upload" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Ícone do Quiz</label>
+                        <input id="quiz-icon-upload" type="file" class="mt-1 w-full text-sm text-marrom-terra dark:text-dark-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/20 file:text-verde-campo hover:file:bg-verde-campo/30"/>
+                        <p id="quiz-icon-status" class="text-xs mt-1 text-gray-500"></p>
+                    </div>
+
+                    <div id="questions-container" class="space-y-6 pt-6 border-t dark:border-dark-border"></div>
+                    <button type="button" id="add-question-btn" class="w-full text-sm font-bold text-verde-campo border-2 border-dashed border-verde-campo rounded-lg py-2 hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">
+                        + Adicionar Pergunta
+                    </button>
+                    
+                    <div class="pt-6 border-t dark:border-dark-border space-y-4">
+                        <div>
+                            <label for="quiz-turma-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
+                            <select id="quiz-turma-select" class="w-full mt-1 p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
                                 <option value="todos">Todas as Turmas</option>
                                 <option value="6">6º Ano</option>
                                 <option value="7">7º Ano</option>
@@ -206,109 +260,24 @@
                                 <option value="9">9º Ano</option>
                             </select>
                         </div>
-                        <div class="flex gap-2">
-                            <button id="filter-btn" class="w-full bg-azul-ceu/80 text-white font-bold py-2 px-4 rounded-md hover:bg-azul-ceu">Filtrar</button>
-                            <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
+                        <div id="quiz-student-list-container" class="hidden">
+                            <label class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Escolha os alunos:</label>
+                            <div id="quiz-student-list" class="mt-2 p-3 border rounded-md h-32 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-dark-border text-sm"></div>
                         </div>
                     </div>
-                </div>
 
-                <div id="quizzes-list-teacher" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Cards de quizzes do professor serão preenchidos aqui -->
-                </div>
+                    <div class="flex gap-4 pt-6 border-t dark:border-dark-border">
+                        <button type="button" id="cancel-quiz-creation-btn" class="w-1/3 bg-gray-300 dark:bg-dark-border text-marrom-terra dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-400">Cancelar</button>
+                        <button type="submit" id="save-quiz-btn" class="w-2/3 bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Salvar Quiz</button>
+                    </div>
+                </form>
             </div>
         </main>
-        <footer class="text-center py-4 text-sm text-marrom-terra/60 dark:text-dark-text-secondary/60">
-            <p>Profº. Ismael Alves</p>
-        </footer>
-    </div>
-
-    <!-- VISÃO 3: PROFESSOR CRIANDO/EDITANDO QUIZ -->
-    <div id="quiz-creator-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
-        <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
-             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 id="creator-title-header" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Criar Quiz</h1>
-                <button id="cancel-quiz-creation-btn-header" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Voltar ao Painel</button>
-            </div>
-        </header>
-        <main class="flex-grow px-4 sm:px-6 lg:px-8 py-10">
-            <div class="max-w-4xl mx-auto">
-                <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
-                    <form id="create-quiz-form" class="space-y-6">
-                        <input type="hidden" id="quiz-id">
-                        <input type="hidden" id="quiz-icon-url-hidden">
-                        <h2 id="creator-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text mb-6">Criar Novo Quiz</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="quiz-title" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Título do Quiz</label>
-                                <input id="quiz-title" type="text" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                            </div>
-                            <div>
-                                <label for="quiz-xp" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pontos de XP pelo Quiz</label>
-                                <input id="quiz-xp" type="number" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="quiz-description" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição do Quiz</label>
-                            <textarea id="quiz-description" rows="3" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" placeholder="Explique o objetivo ou conteúdo do quiz..."></textarea>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="quiz-available-from" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Disponível de:</label>
-                                <input id="quiz-available-from" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
-                            </div>
-                            <div>
-                                <label for="quiz-available-until" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Até:</label>
-                                <input id="quiz-available-until" type="datetime-local" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary" required>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="quiz-icon-upload" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Ícone do Quiz</label>
-                            <input id="quiz-icon-upload" type="file" class="mt-1 w-full text-sm text-marrom-terra dark:text-dark-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/20 file:text-verde-campo hover:file:bg-verde-campo/30"/>
-                            <p id="quiz-icon-status" class="text-xs mt-1 text-gray-500"></p>
-                        </div>
-
-                        <div id="questions-container" class="space-y-6 pt-6 border-t dark:border-dark-border"></div>
-                        <button type="button" id="add-question-btn" class="w-full text-sm font-bold text-verde-campo border-2 border-dashed border-verde-campo rounded-lg py-2 hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">
-                            + Adicionar Pergunta
-                        </button>
-                        
-                        <div class="pt-6 border-t dark:border-dark-border space-y-4">
-                            <div>
-                                <label for="quiz-turma-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
-                                <select id="quiz-turma-select" class="w-full mt-1 p-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="todos">Todas as Turmas</option>
-                                    <option value="6">6º Ano</option>
-                                    <option value="7">7º Ano</option>
-                                    <option value="8">8º Ano</option>
-                                    <option value="9">9º Ano</option>
-                                </select>
-                            </div>
-                            <div id="quiz-student-list-container" class="hidden">
-                                <label class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Escolha os alunos:</label>
-                                <div id="quiz-student-list" class="mt-2 p-3 border rounded-md h-32 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-dark-border text-sm"></div>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-4 pt-6 border-t dark:border-dark-border">
-                            <button type="button" id="cancel-quiz-creation-btn" class="w-1/3 bg-gray-300 dark:bg-dark-border text-marrom-terra dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-400">Cancelar</button>
-                            <button type="submit" id="save-quiz-btn" class="w-2/3 bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Salvar Quiz</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </main>
-        <footer class="text-center py-4 text-sm text-marrom-terra/60 dark:text-dark-text-secondary/60">
-            <p>Profº. Ismael Alves</p>
-        </footer>
     </div>
 
     <!-- VISÃO 4: PAINEL DO ALUNO (LISTA DE QUIZZES) -->
-    <div id="student-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
-         <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+    <div id="student-dashboard-view" class="view">
+         <header class="bg-white dark:bg-dark-card shadow-md">
             <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Meus Quizzes</h1>
@@ -319,25 +288,20 @@
                         <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
-                    <a href="V2.0 App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
-                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
         </header>
-        <main class="flex-grow px-4 sm:px-6 lg:px-8 py-10">
-            <div class="max-w-5xl mx-auto">
-                <div id="quizzes-list-student" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Cards dos quizzes para o aluno serão preenchidos aqui -->
-                </div>
+        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div id="quizzes-list-student" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Cards dos quizzes para o aluno serão preenchidos aqui -->
             </div>
         </main>
-        <footer class="text-center py-4 text-sm text-marrom-terra/60 dark:text-dark-text-secondary/60">
-            <p>Profº. Ismael Alves</p>
-        </footer>
     </div>
 
     <!-- VISÃO 5: ALUNO RESPONDENDO O QUIZ -->
-    <div id="quiz-taking-view" class="view min-h-screen flex flex-col items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+    <div id="quiz-taking-view" class="view min-h-screen bg-azul-ceu/20 dark:bg-dark-bg/50 flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-2xl bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
             <div class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2.5 mb-4">
               <div id="quiz-progress-bar" class="bg-amarelo-sol h-2.5 rounded-full progress-bar-quiz" style="width: 0%"></div>
@@ -361,8 +325,8 @@
     </div>
 
     <!-- VISÃO 6: RESULTADO DO QUIZ -->
-    <div id="quiz-results-view" class="view min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl text-center">
+    <div id="quiz-results-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center">
+        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl text-center">
             <h1 class="text-3xl font-bold text-marrom-terra dark:text-dark-text">Quiz Finalizado!</h1>
             <img id="quiz-result-image" src="" class="w-32 h-32 mx-auto my-4"/>
             <p id="score-text" class="text-2xl font-semibold text-marrom-terra dark:text-dark-text">Você acertou 8 de 10!</p>
@@ -373,14 +337,14 @@
     </div>
 
     <!-- MODAIS -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
         </div>
     </div>
     
-    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="teacher-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -391,7 +355,7 @@
         </div>
     </div>
     
-    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="student-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -402,7 +366,7 @@
         </div>
     </div>
     
-    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="quiz-responses-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Respostas do Quiz</h2>
@@ -484,7 +448,8 @@
             document.getElementById('theme-toggle-light-icon-student'),
             document.getElementById('theme-toggle-light-icon-teacher')
         ];
-        const backgroundContainer = document.getElementById('background-container');
+        const loginViewEl = document.getElementById('login-view');
+        const resultsViewEl = document.getElementById('quiz-results-view');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
         const themeColorMeta = document.getElementById('theme-color-meta');
@@ -492,9 +457,9 @@
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
             themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-            if(backgroundContainer) {
-                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
-            }
+            const bgUrl = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            if(loginViewEl) loginViewEl.style.backgroundImage = bgUrl;
+            if(resultsViewEl) resultsViewEl.style.backgroundImage = bgUrl;
         }
 
         function updateThemeColorMeta(isDark) {
@@ -530,8 +495,7 @@
             document.querySelectorAll('.view, .modal').forEach(v => v.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                const flexViews = ['login-view', 'loading-view', 'quiz-taking-view', 'quiz-results-view'];
-                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+                viewToShow.style.display = (viewId.includes('login') || viewId.includes('results') || viewId.includes('taking') || viewId.includes('loading')) ? 'flex' : 'block';
             }
         }
 
@@ -583,14 +547,8 @@
             }
         });
         
-        document.querySelectorAll('#teacher-logout-btn, #student-logout-btn, #cancel-quiz-creation-btn-header').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if(btn.id.includes('logout')){
-                    signOut(auth)
-                } else {
-                    showView('teacher-dashboard-view');
-                }
-            });
+        document.querySelectorAll('#teacher-logout-btn, #student-logout-btn').forEach(btn => {
+            btn.addEventListener('click', () => signOut(auth));
         });
 
         goToCreateQuizBtn.addEventListener('click', () => {
@@ -650,7 +608,6 @@
             createQuizForm.reset();
             document.getElementById('quiz-id').value = '';
             document.getElementById('creator-title').textContent = 'Criar Novo Quiz';
-            document.getElementById('creator-title-header').textContent = 'Criar Novo Quiz';
             questionsContainer.innerHTML = '';
             questionCounter = 0;
             addQuestionToDOM();
@@ -886,7 +843,7 @@
                         ${statusText}
                     </div>
                     
-                    <div class="flex flex-col h-full items-center justify-between pt-4">
+                    <div class="flex flex-col h-full items-center justify-center pt-4">
                         <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
                         <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
@@ -894,6 +851,8 @@
                         <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${targetText}</p>
                         
                         <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
+                        
+                        <div class="flex-grow"></div>
                         
                         <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
                            <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
@@ -1100,7 +1059,6 @@
                 const quizData = quizDoc.data();
                 resetCreatorForm();
                 document.getElementById('creator-title').textContent = 'Editar Quiz';
-                document.getElementById('creator-title-header').textContent = 'Editar Quiz';
                 document.getElementById('quiz-id').value = quizId;
                 document.getElementById('quiz-title').value = quizData.title;
                 document.getElementById('quiz-description').value = quizData.description || '';
@@ -1246,14 +1204,14 @@
                         ${statusText}
                     </div>
                     
-                    <div class="flex flex-col h-full items-center justify-between pt-4">
+                    <div class="flex flex-col h-full items-center justify-center pt-4">
                         <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
                         <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
                         
-                        <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${quiz.questions.length} questões</p>
-                        
                         <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
+                        
+                        <div class="flex-grow"></div>
                         
                         <div class="w-full ${dateBgColor} mt-4 p-2 rounded-full text-center">
                            <p class="text-xs font-bold ${dateTextColor}">${dateText}</p>
@@ -1381,6 +1339,7 @@
             }
         });
 
+        // [MODIFICADO] Função de finalizar quiz para usar XP fixo
         async function finishQuiz() {
             let score = 0;
             currentQuiz.questions.forEach((q, index) => {
@@ -1389,6 +1348,7 @@
                 }
             });
 
+            // O aluno ganha o XP total do quiz apenas por completar, independente da nota.
             const xpEarned = currentQuiz.xp; 
             
             const batch = writeBatch(db);
@@ -1435,8 +1395,9 @@
         });
 
         function showNotification(message) {
+            const modal = document.getElementById('notification-modal');
             document.getElementById('notification-message').textContent = message;
-            document.getElementById('notification-modal').style.display = 'flex';
+            modal.style.display = 'flex';
         }
         document.getElementById('notification-ok-btn').addEventListener('click', () => {
             document.getElementById('notification-modal').style.display = 'none';
