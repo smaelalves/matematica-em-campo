@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
     <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
@@ -67,18 +66,34 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
+<body class="font-sans transition-colors duration-300">
+
+    <div id="background-container"></div>
 
     <!-- VISÃO 0: CARREGAMENTO INICIAL -->
-    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
-        <div class="loader"></div>
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando dados da horta...</p>
+        </div>
     </div>
 
     <!-- VISÃO 1: LOGIN -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
-        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
                 <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Coleta de Dados da Natureza</p>
@@ -88,11 +103,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
-                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
-                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
@@ -110,8 +125,8 @@
     </div>
 
     <!-- VISÃO 2: PAINEL DO PROFESSOR -->
-    <div id="teacher-dashboard-view" class="view">
-        <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="teacher-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel do Professor - Horta</h1>
                  <div class="flex items-center gap-4">
@@ -120,61 +135,66 @@
                         <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
                     <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
-                    <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                    <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
         </header>
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
-                <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-3">Filtrar Coletas</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label for="filter-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
-                        <select id="filter-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            <option value="todas">Todas as Turmas</option>
-                            <option value="6">6º Ano</option>
-                            <option value="7">7º Ano</option>
-                            <option value="8">8º Ano</option>
-                            <option value="9">9º Ano</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="filter-date" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Coleta</label>
-                        <input type="date" id="filter-date" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                    </div>
-                    <div>
-                        <label for="filter-plant" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome ou Cód. da Planta</label>
-                        <input type="text" id="filter-plant" placeholder="Ex: Tomate ou PLT-01" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="filter-btn" class="w-full bg-verde-campo text-white font-bold py-2 px-4 rounded-md hover:bg-verde-campo/90">Filtrar</button>
-                        <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
+        <main class="flex-grow px-4 sm:px-6 lg:px-8 py-10">
+            <div class="max-w-7xl mx-auto">
+                <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-lg mb-6">
+                    <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-3">Filtrar Coletas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label for="filter-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Turma</label>
+                            <select id="filter-turma" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                <option value="todas">Todas as Turmas</option>
+                                <option value="6">6º Ano</option>
+                                <option value="7">7º Ano</option>
+                                <option value="8">8º Ano</option>
+                                <option value="9">9º Ano</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-date" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Coleta</label>
+                            <input type="date" id="filter-date" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                        </div>
+                        <div>
+                            <label for="filter-plant" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome ou Cód. da Planta</label>
+                            <input type="text" id="filter-plant" placeholder="Ex: Tomate ou PLT-01" class="w-full mt-1 p-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="filter-btn" class="w-full bg-verde-campo text-white font-bold py-2 px-4 rounded-md hover:bg-verde-campo/90">Filtrar</button>
+                            <button id="clear-filter-btn" class="w-full bg-gray-300 dark:bg-dark-border text-gray-700 dark:text-dark-text font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600">Limpar</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Alunos com Coletas Realizadas</h2>
-            <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
-                    <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
-                        <tr>
-                            <th class="px-4 py-3">Aluno</th>
-                            <th class="px-4 py-3">Turma</th>
-                            <th class="px-4 py-3">Nº de Coletas</th>
-                            <th class="px-4 py-3">Última Coleta</th>
-                            <th class="px-4 py-3">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="students-with-collections-table-body">
-                        <!-- Linhas da tabela de alunos serão inseridas aqui -->
-                    </tbody>
-                </table>
+                <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Alunos com Coletas Realizadas</h2>
+                <div class="bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-dark-text-secondary">
+                        <thead class="text-xs text-marrom-terra dark:text-dark-text uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
+                            <tr>
+                                <th class="px-4 py-3">Aluno</th>
+                                <th class="px-4 py-3">Turma</th>
+                                <th class="px-4 py-3">Nº de Coletas</th>
+                                <th class="px-4 py-3">Última Coleta</th>
+                                <th class="px-4 py-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-with-collections-table-body">
+                            <!-- Linhas da tabela de alunos serão inseridas aqui -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
+        <footer class="text-center py-4 text-sm text-marrom-terra/60 dark:text-dark-text-secondary/60">
+            <p>Profº. Ismael Alves</p>
+        </footer>
     </div>
 
     <!-- VISÃO 3: PAINEL DO ALUNO -->
-    <div id="student-dashboard-view" class="view">
-         <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="student-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+         <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coleta de Dados da Horta</h1>
@@ -186,178 +206,183 @@
                         <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
                     <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md">Painel Principal</a>
-                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                    <button id="student-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
                 </div>
             </div>
         </header>
-        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
-                <form id="collection-form" class="space-y-6">
-                    
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">1. Identificação da Planta</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="plantId" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Código da Planta (QR Code)</label>
-                                <input type="text" id="plantId" class="mt-1 block w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                                <div id="plant-id-status" class="text-xs mt-1"></div>
-                            </div>
-                             <div>
-                                <label for="plantName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Popular</label>
-                                <input type="text" id="plantName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                            </div>
-                            <div>
-                                <label for="plantScientificName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Científico</label>
-                                <input type="text" id="plantScientificName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="plantDescription" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição da Planta</label>
-                                <textarea id="plantDescription" rows="2" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="plantUses" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Possíveis Usos (culinário, medicinal, etc)</label>
-                                <input type="text" id="plantUses" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">2. Dados de Crescimento e Produção</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="plantingDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data de Plantio</label>
-                                <input type="date" id="plantingDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                            </div>
-                            <div>
-                                <label for="plantHeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Altura da Planta (cm)</label>
-                                <input type="number" step="0.1" id="plantHeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="branchCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nº de Ramos ou Brotos Novos</label>
-                                <input type="number" id="branchCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="flowerCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Flores</label>
-                                <input type="number" id="flowerCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="fruitCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Frutos</label>
-                                <input type="number" id="fruitCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="lastHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Última Colheita</label>
-                                <input type="date" id="lastHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
-                            </div>
-                             <div>
-                                <label for="harvestWeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Peso dos Frutos Colhidos (g)</label>
-                                <input type="number" id="harvestWeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="nextHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Próxima Colheita (previsão)</label>
-                                <input type="date" id="nextHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+        <main class="flex-grow px-4 sm:px-6 lg:px-8 py-10">
+            <div class="max-w-5xl mx-auto">
+                <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                    <form id="collection-form" class="space-y-6">
+                        
+                        <div>
+                            <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">1. Identificação da Planta</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="plantId" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Código da Planta (QR Code)</label>
+                                    <input type="text" id="plantId" class="mt-1 block w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    <div id="plant-id-status" class="text-xs mt-1"></div>
+                                </div>
+                                 <div>
+                                    <label for="plantName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Popular</label>
+                                    <input type="text" id="plantName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                </div>
+                                <div>
+                                    <label for="plantScientificName" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nome Científico</label>
+                                    <input type="text" id="plantScientificName" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div class="lg:col-span-3">
+                                    <label for="plantDescription" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Descrição da Planta</label>
+                                    <textarea id="plantDescription" rows="2" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
+                                </div>
+                                 <div class="lg:col-span-3">
+                                    <label for="plantUses" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Possíveis Usos (culinário, medicinal, etc)</label>
+                                    <input type="text" id="plantUses" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">3. Condições do Ambiente e Cuidados</h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="sunExposure" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Exposição ao Sol (horas/dia)</label>
-                                <input type="number" id="sunExposure" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="waterAmount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Água diária (ml)</label>
-                                <input type="number" id="waterAmount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                            <div>
-                                <label for="soilType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Solo</label>
-                                <select id="soilType" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option>Não sei informar</option>
-                                    <option>Argiloso</option>
-                                    <option>Arenoso</option>
-                                    <option>Humífero (terra preta)</option>
-                                    <option>Outro</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="soilMoisture" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Umidade do Solo</option>
-                                <select id="soilMoisture" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option>Seca</option>
-                                    <option>Úmida</option>
-                                    <option>Encharcada</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="fertilizerType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Adubo Utilizado</label>
-                                <input type="text" id="fertilizerType" placeholder="Esterco, NPK, etc." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                             <div>
-                                <label for="needsFertilizing" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Precisou de Adubação?</label>
-                                <select id="needsFertilizing" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                         </div>
-                    </div>
 
-                     <div>
-                        <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">4. Saúde da Planta</h3>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="hasPests" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pragas ou Doenças?</label>
-                                <select id="hasPests" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="hasWeeds" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Presença de Ervas Daninhas?</label>
-                                <select id="hasWeeds" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div>
-                                <label for="hasDamagedLeaves" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Folhas Danificadas/Murchas?</label>
-                                <select id="hasDamagedLeaves" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                    <option value="nao">Não</option>
-                                    <option value="sim">Sim</option>
-                                </select>
-                            </div>
-                             <div class="lg:col-span-3">
-                                <label for="leafColor" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Cor Predominante das Folhas</label>
-                                <input type="text" id="leafColor" placeholder="Verde claro, verde escuro, amarelada..." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                            </div>
-                         </div>
-                    </div>
-                    
-                    <div>
-                         <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">5. Registro Fotográfico e Observações</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="plantPhoto" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Foto da Planta</label>
-                                <input type="file" id="plantPhoto" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/10 file:text-verde-campo hover:file:bg-verde-campo/20 cursor-pointer">
-                                <img id="photo-preview" class="hidden mt-4 rounded-lg max-h-48 mx-auto shadow-md">
-                            </div>
-                            <div>
-                                 <label for="generalObservations" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Observações Gerais</label>
-                                 <textarea id="generalObservations" rows="4" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
+                        <div>
+                            <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">2. Dados de Crescimento e Produção</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="plantingDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data de Plantio</label>
+                                    <input type="date" id="plantingDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                                </div>
+                                <div>
+                                    <label for="plantHeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Altura da Planta (cm)</label>
+                                    <input type="number" step="0.1" id="plantHeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div>
+                                    <label for="branchCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Nº de Ramos ou Brotos Novos</label>
+                                    <input type="number" id="branchCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div>
+                                    <label for="flowerCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Flores</label>
+                                    <input type="number" id="flowerCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                <div>
+                                    <label for="fruitCount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Número de Frutos</label>
+                                    <input type="number" id="fruitCount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div>
+                                    <label for="lastHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Data da Última Colheita</label>
+                                    <input type="date" id="lastHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                                </div>
+                                 <div>
+                                    <label for="harvestWeight" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Peso dos Frutos Colhidos (g)</label>
+                                    <input type="number" id="harvestWeight" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div>
+                                    <label for="nextHarvestDate" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Próxima Colheita (previsão)</label>
+                                    <input type="date" id="nextHarvestDate" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text dark:[color-scheme:dark]">
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">3. Condições do Ambiente e Cuidados</h3>
+                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="sunExposure" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Exposição ao Sol (horas/dia)</label>
+                                    <input type="number" id="sunExposure" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                <div>
+                                    <label for="waterAmount" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Água diária (ml)</label>
+                                    <input type="number" id="waterAmount" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                <div>
+                                    <label for="soilType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Solo</label>
+                                    <select id="soilType" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option>Não sei informar</option>
+                                        <option>Argiloso</option>
+                                        <option>Arenoso</option>
+                                        <option>Humífero (terra preta)</option>
+                                        <option>Outro</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label for="soilMoisture" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Umidade do Solo</option>
+                                    <select id="soilMoisture" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option>Seca</option>
+                                        <option>Úmida</option>
+                                        <option>Encharcada</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label for="fertilizerType" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Tipo de Adubo Utilizado</label>
+                                    <input type="text" id="fertilizerType" placeholder="Esterco, NPK, etc." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                                 <div>
+                                    <label for="needsFertilizing" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Precisou de Adubação?</label>
+                                    <select id="needsFertilizing" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option value="nao">Não</option>
+                                        <option value="sim">Sim</option>
+                                    </select>
+                                </div>
+                             </div>
+                        </div>
 
-                    <div class="pt-4 text-right">
-                        <button type="submit" id="save-collection-btn" class="bg-verde-campo text-white font-bold py-3 px-6 rounded-lg hover:bg-verde-campo/90 text-lg">Salvar Coleta</button>
-                    </div>
-                </form>
+                         <div>
+                            <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">4. Saúde da Planta</h3>
+                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="hasPests" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Pragas ou Doenças?</label>
+                                    <select id="hasPests" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option value="nao">Não</option>
+                                        <option value="sim">Sim</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label for="hasWeeds" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Presença de Ervas Daninhas?</label>
+                                    <select id="hasWeeds" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option value="nao">Não</option>
+                                        <option value="sim">Sim</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label for="hasDamagedLeaves" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Folhas Danificadas/Murchas?</label>
+                                    <select id="hasDamagedLeaves" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <option value="nao">Não</option>
+                                        <option value="sim">Sim</option>
+                                    </select>
+                                </div>
+                                 <div class="lg:col-span-3">
+                                    <label for="leafColor" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Cor Predominante das Folhas</label>
+                                    <input type="text" id="leafColor" placeholder="Verde claro, verde escuro, amarelada..." class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                </div>
+                             </div>
+                        </div>
+                        
+                        <div>
+                             <h3 class="text-lg font-bold text-marrom-terra dark:text-dark-text border-b dark:border-dark-border pb-2 mb-4">5. Registro Fotográfico e Observações</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="plantPhoto" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Foto da Planta</label>
+                                    <input type="file" id="plantPhoto" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-verde-campo/10 file:text-verde-campo hover:file:bg-verde-campo/20 cursor-pointer">
+                                    <img id="photo-preview" class="hidden mt-4 rounded-lg max-h-48 mx-auto shadow-md">
+                                </div>
+                                <div>
+                                     <label for="generalObservations" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Observações Gerais</label>
+                                     <textarea id="generalObservations" rows="4" class="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 text-right">
+                            <button type="submit" id="save-collection-btn" class="bg-verde-campo text-white font-bold py-3 px-6 rounded-lg hover:bg-verde-campo/90 text-lg">Salvar Coleta</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
+        <footer class="text-center py-4 text-sm text-marrom-terra/60 dark:text-dark-text-secondary/60">
+            <p>Profº. Ismael Alves</p>
+        </footer>
     </div>
 
     <!-- VISÃO 4: PÁGINA PÚBLICA DO VISITANTE -->
-    <div id="visitor-plant-view" class="view p-4 md:p-8">
+    <div id="visitor-plant-view" class="view min-h-screen flex items-center justify-center p-4 md:p-8 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
         <div class="max-w-2xl mx-auto bg-white dark:bg-dark-card p-6 rounded-2xl shadow-2xl">
             <div id="visitor-content">
                 <!-- Conteúdo da planta para o visitante será inserido aqui -->
@@ -369,7 +394,7 @@
     </div>
 
     <!-- MODAL DE COLETAS DO ALUNO -->
-    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="student-collections-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coletas do Aluno</h2>
@@ -394,7 +419,7 @@
     </div>
 
     <!-- MODAL DE DETALHES DA COLETA -->
-    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div id="details-modal-header" class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                  <!-- Header do modal será injetado aqui -->
@@ -407,7 +432,7 @@
 
 
     <!-- MODAL DE NOTIFICAÇÃO -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
@@ -459,28 +484,25 @@
             document.getElementById('theme-toggle-light-icon-student'),
             document.getElementById('theme-toggle-light-icon-teacher')
         ];
-        const loginViewEl = document.getElementById('login-view');
+        const backgroundContainer = document.getElementById('background-container');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
-        // [NOVO] Referência para a meta tag de cor do tema
         const themeColorMeta = document.getElementById('theme-color-meta');
 
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
             themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-            if(loginViewEl) {
-                loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
             }
         }
 
-        // [NOVO] Função para atualizar a cor da barra de título do navegador
         function updateThemeColorMeta(isDark) {
             if (themeColorMeta) {
                 themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
             }
         }
 
-        // [MODIFICADO] Função de tema para incluir a atualização da meta tag
         function setTheme(isDark) {
              if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -493,7 +515,6 @@
             updateThemeColorMeta(isDark);
         }
         
-        // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
         updateThemeVisuals(document.documentElement.classList.contains('dark'));
         updateThemeColorMeta(document.documentElement.classList.contains('dark'));
         
@@ -512,7 +533,7 @@
             modals.forEach(m => m.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                const flexViews = ['login-view', 'loading-view'];
+                const flexViews = ['login-view', 'loading-view', 'visitor-plant-view'];
                 viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
             }
         }
