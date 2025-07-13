@@ -470,16 +470,22 @@
             }
         }
 
-        function setTheme(isDark) {
-             if (isDark) {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('color-theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('color-theme', 'light');
-            }
-            updateThemeVisuals(isDark);
-        }
+function setTheme(isDark) {
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+    }
+    updateThemeVisuals(isDark);
+
+    // Atualiza a cor da barra do navegador
+    const metaThemeColor = document.querySelector("meta[name='theme-color']");
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", isDark ? "#121212" : "#1a73e8");
+    }
+}
         
         updateThemeVisuals(document.documentElement.classList.contains('dark'));
         
