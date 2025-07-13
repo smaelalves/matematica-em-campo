@@ -5,17 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
     <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
 
     <title>Matemática em Campo</title>
+    <!-- [INÍCIO] Fontes e Cores Customizadas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Adicionado Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC (Flash of Unstyled Content)
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -23,6 +27,7 @@
         }
     </script>
     <script>
+        // Configuração do Tailwind CSS para incluir a nova paleta de cores, fonte e modo escuro
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -32,6 +37,7 @@
                         'azul-ceu': '#81D4FA',
                         'amarelo-sol': '#FDD835',
                         'marrom-terra': '#8D6E63',
+                        // Cores para o tema escuro
                         'dark-bg': '#121212',
                         'dark-card': '#1e1e1e',
                         'dark-text': '#e0e0e0',
@@ -45,11 +51,13 @@
             }
         }
     </script>
+    <!-- [FIM] Fontes e Cores Customizadas -->
     <style>
+        /* Estilos globais e para componentes específicos */
         .view, .modal { display: none; }
         .loader {
-            border: 4px solid #424242;
-            border-top: 4px solid #4CAF50;
+            border: 4px solid #424242; /* dark-border */
+            border-top: 4px solid #4CAF50; /* Verde Campo */
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -64,12 +72,12 @@
             100% { transform: rotate(360deg); }
         }
         .progress-bar-inner {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Verde Campo */
             height: 100%;
             border-radius: 9999px;
             transition: width 0.5s ease-in-out;
         }
-        .xp-gain { color: #4CAF50; }
+        .xp-gain { color: #4CAF50; } /* Verde Campo */
         .xp-loss { color: #dc2626; }
         
         .medal-selector {
@@ -93,12 +101,13 @@
             opacity: 1;
         }
         .medal-selector.awarded {
-            border-color: #FDD835;
+            border-color: #FDD835; /* Amarelo Sol */
         }
         .medal-selector:hover img {
             transform: scale(1.05);
             opacity: 1;
         }
+        /* Estilos para ordenação da tabela */
         .sortable-header th {
             position: relative;
         }
@@ -126,25 +135,12 @@
             border-top: 5px solid currentColor;
             opacity: 1;
         }
-        #background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -10;
-            background-size: cover;
-            background-position: center;
-            transition: background-image 0.5s ease-in-out;
-        }
     </style>
 </head>
-<body class="font-sans transition-colors duration-300">
-    
-    <div id="background-container"></div>
+<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
 
     <!-- VISÃO 0: CARREGAMENTO -->
-    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
         <div class="text-center">
             <div class="loader mx-auto"></div>
             <p id="loading-message" class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando plataforma...</p>
@@ -152,8 +148,8 @@
     </div>
 
     <!-- VISÃO 1: LOGIN -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
-        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
+        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
                 <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Acesse seu painel de aprendizado.</p>
@@ -163,11 +159,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
-                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
-                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
                     </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
@@ -188,7 +184,7 @@
 
     <!-- VISÃO 2: PAINEL DO ALUNO -->
     <div id="student-dashboard-view" class="view">
-        <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+        <header class="bg-azul-ceu/80 dark:bg-dark-card shadow-sm sticky top-0 z-10 backdrop-blur-sm">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Meu Painel</h1>
                 <div class="flex items-center gap-4">
@@ -200,11 +196,11 @@
                 </div>
             </div>
         </header>
-        <main class="py-10 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <main class="py-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 space-y-8">
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                             <div class="flex items-center space-x-5">
                                 <div class="flex-shrink-0 relative group">
                                     <img id="student-photo" class="h-24 w-24 rounded-full object-cover ring-4 ring-verde-campo/50" src="https://placehold.co/100x100/E2E8F0/4A5568?text=..." alt="Foto do Aluno">
@@ -234,7 +230,7 @@
                                 <ul id="xp-history-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></ul>
                             </div>
                         </div>
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                              <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">🏆 Rankings de XP</h3>
                              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                  <div>
@@ -247,21 +243,21 @@
                                  </div>
                              </div>
                         </div>
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                              <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Minhas Atividades</h3>
                              <ul id="activities-list" class="space-y-4"></ul>
                         </div>
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                              <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Mural de Avisos</h3>
                              <ul id="announcements-list" class="space-y-4"></ul>
                         </div>
                     </div>
                     <div id="student-right-column" class="space-y-8">
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                              <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Minhas Conquistas</h3>
                              <div id="student-medals-list" class="grid grid-cols-3 gap-4"></div>
                         </div>
-                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
                              <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Outros Aplicativos</h3>
                              <div class="flex justify-around items-center pt-2">
                                  <a href="App_Quiz.html" class="flex flex-col items-center text-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200">
@@ -287,8 +283,8 @@
 
     <!-- VISÃO 3: PAINEL DO PROFESSOR -->
     <div id="teacher-dashboard-view" class="view">
-        <div class="flex h-screen">
-            <div class="w-64 bg-azul-ceu/80 dark:bg-dark-card/80 backdrop-blur-md shadow-md flex flex-col">
+        <div class="flex h-screen bg-sky-50 dark:bg-dark-bg">
+            <div class="w-64 bg-azul-ceu/50 dark:bg-dark-card shadow-md flex flex-col">
                 <div class="p-6 border-b border-marrom-terra/20 dark:border-dark-border">
                     <h2 class="text-xl font-extrabold text-marrom-terra dark:text-dark-text">Matemática em Campo</h2>
                     <p id="teacher-name" class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Prof.º Ismael Alves</p>
@@ -314,12 +310,11 @@
                     </button>
                 </div>
             </div>
-            <div class="flex-1 flex flex-col overflow-hidden relative">
-                 <div class="absolute inset-0 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md -z-10"></div>
-                <main class="flex-1 overflow-x-hidden overflow-y-auto p-8 relative">
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <main class="flex-1 overflow-x-hidden overflow-y-auto p-8">
                     <div id="dashboard-main" class="teacher-content-view">
                         <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Visão Geral</h3>
-                        <div class="border-b border-marrom-terra/20 dark:border-dark-border">
+                         <div class="border-b border-marrom-terra/20 dark:border-dark-border">
                             <nav id="overview-tabs" class="-mb-px flex space-x-6">
                                 <a data-turma="todos" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">Geral</a>
                                 <a data-turma="6" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">6º Ano</a>
@@ -343,9 +338,10 @@
                                 <a data-turma="9" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">9º Ano</a>
                             </nav>
                         </div>
-                        <div class="bg-white dark:bg-dark-card mt-4 p-4 rounded-lg shadow-lg overflow-x-auto">
+                        <div class="bg-white dark:bg-dark-card mt-4 p-4 rounded-lg shadow-md overflow-x-auto">
                             <table class="w-full text-sm text-left text-marrom-terra dark:text-dark-text-secondary">
                                 <thead class="text-xs uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
+                                    <!-- [ATUALIZADO] Cabeçalho da tabela de alunos -->
                                     <tr id="students-table-header" class="sortable-header">
                                         <th class="px-6 py-3 cursor-pointer" data-sort="name">Nome<span class="sort-arrow"></span></th>
                                         <th class="px-6 py-3 cursor-pointer" data-sort="turma">Turma<span class="sort-arrow"></span></th>
@@ -362,14 +358,14 @@
                     <div id="manage-content" class="teacher-content-view hidden">
                          <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Conteúdo da Turma</h3>
                          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Publicar Novo Aviso</h4>
                                 <form id="announcement-form" class="space-y-4">
-                                    <input id="announcement-title" type="text" placeholder="Título do Aviso" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required>
-                                    <textarea id="announcement-message" placeholder="Mensagem para a turma..." rows="4" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required></textarea>
+                                    <input id="announcement-title" type="text" placeholder="Título do Aviso" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    <textarea id="announcement-message" placeholder="Mensagem para a turma..." rows="4" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required></textarea>
                                     <div>
                                         <label for="announcement-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
-                                        <select id="announcement-turma" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text">
+                                        <select id="announcement-turma" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
                                             <option value="todos">Todas as Turmas</option>
                                             <option value="6">6º Ano</option>
                                             <option value="7">7º Ano</option>
@@ -384,18 +380,18 @@
                                     <button type="submit" id="publish-announcement-btn" class="bg-verde-campo text-white px-4 py-2 rounded-lg hover:bg-verde-campo/90 w-full font-bold">Publicar Aviso</button>
                                 </form>
                             </div>
-                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Criar Nova Atividade</h4>
                                 <form id="create-activity-form" class="space-y-4">
-                                    <input id="activity-title" type="text" placeholder="Título da Atividade" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required>
-                                    <textarea id="activity-description" placeholder="Descrição da atividade..." rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required></textarea>
+                                    <input id="activity-title" type="text" placeholder="Título da Atividade" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    <textarea id="activity-description" placeholder="Descrição da atividade..." rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required></textarea>
                                     <div class="flex gap-4">
-                                        <input id="activity-xp" type="number" placeholder="XP" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required>
-                                        <input id="activity-due-date" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" placeholder="Prazo de Entrega" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text" required>
+                                        <input id="activity-xp" type="number" placeholder="XP" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                        <input id="activity-due-date" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" placeholder="Prazo de Entrega" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
                                     </div>
                                     <div>
                                         <label for="activity-turma-select" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
-                                        <select id="activity-turma-select" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text">
+                                        <select id="activity-turma-select" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
                                             <option value="todos">Todas as Turmas</option>
                                             <option value="6">6º Ano</option>
                                             <option value="7">7º Ano</option>
@@ -413,6 +409,7 @@
                          </div>
                     </div>
                     <div id="manage-medals" class="teacher-content-view hidden">
+                        <!-- Conteúdo será injetado pelo JavaScript -->
                     </div>
                 </main>
             </div>
@@ -486,13 +483,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             let app, auth, db, storage;
             let allStudentsCache = [];
-            let allHistoryCache = []; 
+            let allHistoryCache = []; // Cache para o histórico de todos os alunos
             let studentProfileUnsubscribe = null; 
             let currentSortBy = 'name';
             let sortDirection = 'asc';
             let studentChartInstance = null;
             let overviewChartInstance = null; 
 
+            // Elements
             const loadingView = document.getElementById('loading-view');
             const loadingMessage = document.getElementById('loading-message');
             const loginView = document.getElementById('login-view');
@@ -521,7 +519,6 @@
             const activityTurmaSelect = document.getElementById('activity-turma-select');
             const studentListContainer = document.getElementById('activity-student-list-container');
             const studentListDiv = document.getElementById('activity-student-list');
-            const backgroundContainer = document.getElementById('background-container');
 
             // --- THEME TOGGLE LOGIC ---
             const themeToggleBtns = [
@@ -539,25 +536,29 @@
                 document.getElementById('theme-toggle-light-icon-student'),
                 document.getElementById('theme-toggle-light-icon-teacher')
             ];
+            const loginViewEl = document.getElementById('login-view');
             const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
             const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+            // [NOVO] Referência para a meta tag de cor do tema
             const themeColorMeta = document.getElementById('theme-color-meta');
 
 
             function updateThemeVisuals(isDark) {
                 themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
                 themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-                if(backgroundContainer) {
-                    backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+                if(loginViewEl) {
+                    loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
                 }
             }
             
+            // [NOVO] Função para atualizar a cor da barra de título do navegador
             function updateThemeColorMeta(isDark) {
                 if (themeColorMeta) {
                     themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
                 }
             }
 
+            // [MODIFICADO] Função de tema para incluir a atualização da meta tag
             function setTheme(isDark) {
                  if (isDark) {
                     document.documentElement.classList.add('dark');
@@ -567,9 +568,10 @@
                     localStorage.setItem('color-theme', 'light');
                 }
                 updateThemeVisuals(isDark);
-                updateThemeColorMeta(isDark);
+                updateThemeColorMeta(isDark); // Atualiza a cor da barra de título
             }
             
+            // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
             updateThemeVisuals(document.documentElement.classList.contains('dark'));
             updateThemeColorMeta(document.documentElement.classList.contains('dark'));
             
@@ -582,6 +584,7 @@
             });
             // --- END THEME TOGGLE LOGIC ---
 
+            // --- Funções de data e semana ---
             function getTodayDDMM() {
                 const today = new Date();
                 const day = String(today.getDate()).padStart(2, '0');
@@ -596,6 +599,7 @@
                 const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
                 return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
             }
+            // --- FIM Funções de data e semana ---
 
             function showView(viewId) {
                 [loadingView, loginView, studentDashboardView, teacherDashboardView].forEach(v => v.style.display = 'none');
@@ -683,7 +687,7 @@
                     if (birthdayStudents.length > 0) {
                         const widgetDiv = document.createElement('div');
                         widgetDiv.id = 'student-birthday-widget';
-                        widgetDiv.className = 'bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg';
+                        widgetDiv.className = 'bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md';
                         
                         let listItems = '';
                         birthdayStudents.forEach(student => {
@@ -920,10 +924,10 @@
 
                 filteredStudents.forEach(student => {
                     const row = document.createElement('tr');
-                    row.className = 'border-b dark:border-dark-border hover:bg-white/20 dark:hover:bg-dark-border/20';
+                    row.className = 'border-b dark:border-dark-border hover:bg-sky-50/50 dark:hover:bg-dark-border/20';
                     
                     const engagement = student.activitiesAssignedCount > 0 ? ((student.activitiesCompletedCount || 0) / student.activitiesAssignedCount) * 100 : 0;
-                    const learning = (student.weeklyGrade || 0) * 10;
+                    const learning = (student.weeklyGrade || 0) * 10; // Nota de 0-10 para porcentagem 0-100
 
                     row.innerHTML = `
                         <td class="px-6 py-4 font-medium text-marrom-terra dark:text-dark-text">${student.name || 'Nome não definido'}</td>
@@ -956,6 +960,7 @@
                 });
             }
             
+            // [ATUALIZADO] Função para renderizar a Visão Geral com layout corrigido
             async function renderOverview(turma) {
                 const filteredStudents = turma === 'todos' 
                     ? allStudentsCache 
@@ -974,10 +979,10 @@
                 });
 
                 const averageEngagement = filteredStudents.length > 0 ? (totalEngagement / filteredStudents.length) * 100 : 0;
-                const averageLearning = studentsWithGrade > 0 ? (totalLearning / studentsWithGrade) * 10 : 0;
+                const averageLearning = studentsWithGrade > 0 ? (totalLearning / studentsWithGrade) * 10 : 0; // Média da nota * 10 para %
 
                 const birthdayCardHtml = turma === 'todos' ? `
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                         <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🎂 Aniversariantes do Dia</h4>
                         <ul id="overview-birthday-list" class="space-y-3 mt-3"></ul>
                     </div>
@@ -988,31 +993,31 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="space-y-8">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                     <p class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Média de Engajamento</p>
                                     <p class="text-3xl font-bold text-verde-campo">${averageEngagement.toFixed(1)}%</p>
                                 </div>
-                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                     <p class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Média de Aprendizado</p>
                                     <p class="text-3xl font-bold text-amarelo-sol">${averageLearning.toFixed(1)}%</p>
                                 </div>
                             </div>
-                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🏆 Ranking de XP (Total)</h4>
                                 <ul id="overview-ranking-list" class="space-y-2 mt-3"></ul>
                             </div>
-                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">Histórico de Desempenho da Turma</h4>
                                 <div class="h-64"><canvas id="overview-history-chart"></canvas></div>
                             </div>
                         </div>
                         <div class="space-y-8">
                             ${birthdayCardHtml}
-                             <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                             <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Avisos Enviados</h4>
                                 <ul id="overview-announcements-list" class="space-y-3 max-h-60 overflow-y-auto pr-2"></ul>
                             </div>
-                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
                                 <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Atividades Postadas</h4>
                                 <ul id="overview-activities-list" class="space-y-3 max-h-60 overflow-y-auto pr-2"></ul>
                             </div>
@@ -1062,6 +1067,7 @@
                 }
             }
 
+            // [ATUALIZADO] Função para renderizar o gráfico de histórico da Visão Geral
             function renderOverviewHistoryChart(filteredStudents) {
                 const ctx = document.getElementById('overview-history-chart').getContext('2d');
                 if (overviewChartInstance) {
@@ -1095,7 +1101,7 @@
                 });
 
                 const labels = Object.keys(aggregatedData).sort();
-                const recentLabels = labels.slice(-10);
+                const recentLabels = labels.slice(-10); // Limita aos últimos 10 registros
 
                 if (recentLabels.length === 0) {
                     ctx.canvas.parentNode.innerHTML = '<p class="text-sm text-center text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum histórico semanal para exibir.</p>';
@@ -1274,11 +1280,11 @@
                 const container = document.getElementById('manage-medals');
                 container.innerHTML = `
                     <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Gerenciar Conquistas e Medalhas</h3>
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg space-y-4">
+                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md space-y-4">
                         <div class="flex items-center gap-8">
                             <div>
                                 <label for="medal-turma-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary mb-2">1. Selecione uma Turma:</label>
-                                <select id="medal-turma-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text">
+                                <select id="medal-turma-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
                                     <option value="">-- Escolha uma turma --</option>
                                     <option value="6">6º Ano</option>
                                     <option value="7">7º Ano</option>
@@ -1288,10 +1294,11 @@
                             </div>
                             <div id="medal-student-select-container" class="hidden">
                                 <label for="medal-student-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary mb-2">2. Selecione um Aluno:</label>
-                                <select id="medal-student-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-bg/80 dark:border-dark-border dark:text-dark-text"></select>
+                                <select id="medal-student-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></select>
                             </div>
                         </div>
                         <div id="student-medals-container" class="mt-6 hidden">
+                            <!-- Medalhas do aluno aparecerão aqui -->
                         </div>
                     </div>
                 `;
@@ -1364,6 +1371,7 @@
                 });
             }
             
+            // --- Teacher Navigation and Tab Styling ---
             function styleActiveNavLink(activeLink) {
                  teacherNav.querySelectorAll('.nav-link').forEach(link => {
                     link.classList.remove('active', 'bg-verde-campo/20', 'dark:bg-verde-campo/30', 'text-verde-campo', 'dark:text-white', 'font-bold');
@@ -1487,10 +1495,11 @@
                     </div>
                 `;
 
+                // Lógica para renderizar o gráfico
                 const historyQuery = query(collection(db, 'users', student.id, 'weekly_history'), orderBy('endDate', 'asc'));
                 const historySnapshot = await getDocs(historyQuery);
                 const historyData = historySnapshot.docs.map(d => d.data());
-                const recentHistoryData = historyData.slice(-10);
+                const recentHistoryData = historyData.slice(-10); // Limita aos últimos 10 registros
 
                 const chartContainer = document.getElementById('chart-container');
                 if (recentHistoryData.length > 0) {
@@ -1505,7 +1514,7 @@
                             datasets: [{
                                 label: 'Engajamento (%)',
                                 data: recentHistoryData.map(d => d.engagementPercentage),
-                                borderColor: '#4CAF50',
+                                borderColor: '#4CAF50', // verde-campo
                                 backgroundColor: 'rgba(76, 175, 80, 0.1)',
                                 fill: true,
                                 yAxisID: 'y',
@@ -1513,7 +1522,7 @@
                             }, {
                                 label: 'Aprendizado (Nota %)',
                                 data: recentHistoryData.map(d => d.learningPercentage),
-                                borderColor: '#FDD835',
+                                borderColor: '#FDD835', // amarelo-sol
                                 backgroundColor: 'rgba(253, 216, 53, 0.1)',
                                 fill: true,
                                 yAxisID: 'y',
@@ -1553,6 +1562,7 @@
                     chartContainer.innerHTML = '<p class="text-sm text-center text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum histórico semanal para exibir.</p>';
                 }
 
+                // [ATUALIZADO] Event listener para salvar a nota e finalizar a semana para o aluno
                 document.getElementById('save-grade-btn').addEventListener('click', async (e) => {
                     const gradeInput = document.getElementById('weekly-grade-input');
                     const grade = parseFloat(gradeInput.value);
@@ -1662,6 +1672,7 @@
                 }
             }
             
+            // [ATUALIZADO] Função para salvar a nota e registrar o histórico da semana
             async function saveGradeAndFinalizeWeek(studentId, grade) {
                 const student = allStudentsCache.find(s => s.id === studentId);
                 if (!student) return;
@@ -1678,8 +1689,10 @@
 
                 const batch = writeBatch(db);
 
+                // Atualiza a nota da semana no perfil do aluno
                 batch.update(studentRef, { weeklyGrade: grade });
 
+                // Salva o "retrato" da semana no histórico
                 const historyEntry = {
                     studentId: studentId,
                     weekId: weekId,
@@ -1695,6 +1708,7 @@
                 try {
                     await batch.commit();
                     
+                    // Atualiza o cache local para a UI responder imediatamente
                     student.weeklyGrade = grade;
                     const historyCacheIndex = allHistoryCache.findIndex(h => h.studentId === studentId && h.weekId === weekId);
                     if(historyCacheIndex > -1) {
@@ -1703,8 +1717,8 @@
                         allHistoryCache.push(historyEntry);
                     }
 
-                    sortAndRenderStudents(currentSortBy);
-                    openStudentModal(studentId);
+                    sortAndRenderStudents(currentSortBy); // Re-renderiza a tabela principal
+                    openStudentModal(studentId); // Reabre o modal com dados atualizados (inclusive o gráfico)
                     showNotification("Nota e histórico da semana salvos!");
 
                 } catch (error) {
@@ -1949,6 +1963,7 @@
             setupStudentSelector(activityTurmaSelect, studentListContainer, studentListDiv);
             setupStudentSelector(announcementTurmaSelect, announcementStudentListContainer, announcementStudentListDiv);
 
+            // [ATUALIZADO] Função para preparar a nova semana, apenas limpando a nota
             async function prepareForNewWeek() {
                 const now = new Date();
                 const currentWeekId = getWeekId(now);
@@ -1963,11 +1978,13 @@
                         updatesNeeded = true;
                         const studentRef = doc(db, 'users', student.id);
 
+                        // Apenas limpa a nota da semana e atualiza a data do reset
                         batch.update(studentRef, {
                             weeklyGrade: deleteField(),
                             lastResetDate: serverTimestamp()
                         });
 
+                        // Atualiza o cache local
                         delete student.weeklyGrade;
                         student.lastResetDate = new Timestamp(Math.floor(now.getTime() / 1000), 0);
                     }
@@ -1985,6 +2002,7 @@
                 }
             }
 
+            // [NOVO] Função para carregar todo o histórico de uma vez
             async function loadAllHistory() {
                 loadingMessage.textContent = 'Carregando histórico de desempenho...';
                 allHistoryCache = [];
@@ -2022,7 +2040,7 @@
 
                                 if (profile.role === 'professor') {
                                     await prepareForNewWeek();
-                                    await loadAllHistory();
+                                    await loadAllHistory(); // Carrega o histórico de todos os alunos
                                     await populateTeacherDashboard(user.uid, profile);
                                     showView('teacher-dashboard-view');
                                     styleActiveNavLink(teacherNav.querySelector('a[data-target="dashboard-main"]'));
@@ -2047,7 +2065,7 @@
                                             photoUploadStatus.className = 'text-sm mt-4 text-center text-red-600';
                                             return;
                                         }
-                                        if (file.size > 5 * 1024 * 1024) {
+                                        if (file.size > 5 * 1024 * 1024) { // Limite de 5MB
                                             photoUploadStatus.textContent = 'A imagem é muito grande (máx 5MB).';
                                             photoUploadStatus.className = 'text-sm mt-4 text-center text-red-600';
                                             return;
