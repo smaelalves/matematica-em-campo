@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <!-- [MODIFICADO] Adicionado ID para manipulação via JS -->
     <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
     <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
     <link rel="manifest" href="manifest.json">
@@ -67,18 +66,36 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* [NOVO] Estilo para o container do background */
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
+<body class="font-sans transition-colors duration-300">
+
+    <!-- [NOVO] Container para o background dinâmico -->
+    <div id="background-container"></div>
 
     <!-- VISÃO 0: CARREGAMENTO INICIAL -->
-    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
-        <div class="loader"></div>
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando dados da horta...</p>
+        </div>
     </div>
 
     <!-- VISÃO 1: LOGIN -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
-        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
                 <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Coleta de Dados da Natureza</p>
@@ -88,11 +105,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
-                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
-                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
@@ -110,8 +127,8 @@
     </div>
 
     <!-- VISÃO 2: PAINEL DO PROFESSOR -->
-    <div id="teacher-dashboard-view" class="view">
-        <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="teacher-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel do Professor - Horta</h1>
                  <div class="flex items-center gap-4">
@@ -124,7 +141,7 @@
                 </div>
             </div>
         </header>
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <main class="flex-grow max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 w-full">
             <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
                 <h3 class="font-bold text-marrom-terra dark:text-dark-text mb-3">Filtrar Coletas</h3>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -173,8 +190,8 @@
     </div>
 
     <!-- VISÃO 3: PAINEL DO ALUNO -->
-    <div id="student-dashboard-view" class="view">
-         <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="student-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+         <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coleta de Dados da Horta</h1>
@@ -190,8 +207,8 @@
                 </div>
             </div>
         </header>
-        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg">
+        <main class="flex-grow max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 w-full">
+            <div class="bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
                 <form id="collection-form" class="space-y-6">
                     
                     <div>
@@ -357,8 +374,8 @@
     </div>
 
     <!-- VISÃO 4: PÁGINA PÚBLICA DO VISITANTE -->
-    <div id="visitor-plant-view" class="view p-4 md:p-8">
-        <div class="max-w-2xl mx-auto bg-white dark:bg-dark-card p-6 rounded-2xl shadow-2xl">
+    <div id="visitor-plant-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <div class="max-w-2xl mx-auto bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl w-full">
             <div id="visitor-content">
                 <!-- Conteúdo da planta para o visitante será inserido aqui -->
             </div>
@@ -369,7 +386,7 @@
     </div>
 
     <!-- MODAL DE COLETAS DO ALUNO -->
-    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="student-collections-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coletas do Aluno</h2>
@@ -394,7 +411,7 @@
     </div>
 
     <!-- MODAL DE DETALHES DA COLETA -->
-    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div id="details-modal-header" class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                  <!-- Header do modal será injetado aqui -->
@@ -407,7 +424,7 @@
 
 
     <!-- MODAL DE NOTIFICAÇÃO -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
@@ -459,28 +476,25 @@
             document.getElementById('theme-toggle-light-icon-student'),
             document.getElementById('theme-toggle-light-icon-teacher')
         ];
-        const loginViewEl = document.getElementById('login-view');
+        const backgroundContainer = document.getElementById('background-container');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
-        // [NOVO] Referência para a meta tag de cor do tema
         const themeColorMeta = document.getElementById('theme-color-meta');
 
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
             themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-            if(loginViewEl) {
-                loginViewEl.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
             }
         }
 
-        // [NOVO] Função para atualizar a cor da barra de título do navegador
         function updateThemeColorMeta(isDark) {
             if (themeColorMeta) {
                 themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
             }
         }
 
-        // [MODIFICADO] Função de tema para incluir a atualização da meta tag
         function setTheme(isDark) {
              if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -493,7 +507,6 @@
             updateThemeColorMeta(isDark);
         }
         
-        // [MODIFICADO] Atualiza o tema visual e a cor da barra de título no carregamento inicial
         updateThemeVisuals(document.documentElement.classList.contains('dark'));
         updateThemeColorMeta(document.documentElement.classList.contains('dark'));
         
@@ -512,8 +525,18 @@
             modals.forEach(m => m.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                const flexViews = ['login-view', 'loading-view'];
-                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+                const flexViews = ['login-view', 'loading-view', 'visitor-plant-view'];
+                const flexColViews = ['teacher-dashboard-view', 'student-dashboard-view'];
+                
+                if (flexViews.includes(viewId)) {
+                    viewToShow.style.display = 'flex';
+                } else if (flexColViews.includes(viewId)) {
+                    viewToShow.style.display = 'flex';
+                    viewToShow.style.flexDirection = 'column';
+                }
+                 else {
+                    viewToShow.style.display = 'block';
+                }
             }
         }
         
@@ -871,6 +894,7 @@
 
         // --- MODAIS ---
         function showNotification(message) {
+            document.getElementById('notification-message').style.display = 'flex';
             document.getElementById('notification-message').textContent = message;
             document.getElementById('notification-modal').style.display = 'flex';
         }
@@ -1002,15 +1026,6 @@
                     
                     <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
 
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Exposição ao Sol:</strong> ${data.sunExposure || 'N/A'} horas/dia</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Água Diária:</strong> ${data.waterAmount || 'N/A'} ml</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Tipo de Solo:</strong> ${data.soilType || 'N/A'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Umidade do Solo:</strong> ${data.soilMoisture || 'N/A'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Adubo Utilizado:</strong> ${data.fertilizerType || 'Nenhum'}</div>
-                    <div class="bg-green-50 dark:bg-green-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Precisou de Adubo?:</strong> ${data.needsFertilizing || 'Não'}</div>
-                    
-                    <div class="lg:col-span-3"><hr class="dark:border-dark-border"></div>
-                    
                     <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Pragas/Doenças?:</strong> ${data.hasPests || 'Não'}</div>
                     <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Ervas Daninhas?:</strong> ${data.hasWeeds || 'Não'}</div>
                     <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-md dark:text-dark-text-secondary"><strong>Folhas Danificadas?:</strong> ${data.hasDamagedLeaves || 'Não'}</div>
