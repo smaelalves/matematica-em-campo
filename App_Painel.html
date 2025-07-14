@@ -481,7 +481,7 @@
             espacial_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_ouro.png?alt=media&token=3ac4c949-b61c-4cf0-a0ee-8a551e3749a3', name: 'Olhar Criativo (Ouro)'},
             corporal_cinestesica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_bronze.png?alt=media&token=fbd36afd-aa46-41b4-b18c-98d9d2e8ac77', name: 'Corpo que Ensina (Bronze)'},
             corporal_cinestesica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_prata.png?alt=media&token=37010a46-6f38-4fab-ba96-fc8dedf5880a', name: 'Corpo que Ensina (Prata)'},
-            corporal_cinestesica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_ouro.png?alt=media&token=15d86cef-ed37-4788-b43f-913e74e74d8', name: 'Corpo que Ensina (Ouro)'},
+            corporal_cinestesica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_ouro.png?alt=media&token=15d86cef-ed37-4788-b43f-913e74e7d8d8', name: 'Corpo que Ensina (Ouro)'},
             musical_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_bronze.png?alt=media&token=9cbab8ce-040c-4bbb-b79f-c943397f5c9b', name: 'Cantador do Saber (Bronze)'},
             musical_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_prata.png?alt=media&token=b25468d9-d0ea-4ffb-bed7-776dbf3d60a6', name: 'Cantador do Saber (Prata)'},
             musical_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_ouro.png?alt=media&token=205d6a7a-63a7-4dff-8334-636bb12b3ee1', name: 'Cantador do Saber (Ouro)'},
@@ -1487,12 +1487,26 @@
 
                             <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Atividades Pendentes</h4>
                             <ul class="space-y-3">${activitiesHtml}</ul>
+                            
+                            <!-- [MODIFICADO] Seção de adicionar e remover pontos -->
                             <hr class="my-6 dark:border-dark-border">
-                            <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Aplicar Desconto de Pontos</h4>
-                            <div class="space-y-3">
-                                <input id="deduct-points-amount" type="number" placeholder="Pontos a descontar (ex: 50)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                <input id="deduct-points-reason" type="text" placeholder="Motivo do desconto" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
-                                <button id="deduct-points-btn" class="w-full bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 font-bold">Aplicar Desconto</button>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-verde-campo mb-3">Adicionar Pontos</h4>
+                                    <div class="space-y-3">
+                                        <input id="add-points-amount" type="number" placeholder="Pontos (ex: 50)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <input id="add-points-reason" type="text" placeholder="Motivo da adição" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <button id="add-points-btn" class="w-full bg-verde-campo text-white px-4 py-2 rounded-lg text-sm hover:bg-verde-campo/90 font-bold">Adicionar Pontos</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-red-500 mb-3">Aplicar Desconto</h4>
+                                    <div class="space-y-3">
+                                        <input id="deduct-points-amount" type="number" placeholder="Pontos (ex: 50)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <input id="deduct-points-reason" type="text" placeholder="Motivo do desconto" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <button id="deduct-points-btn" class="w-full bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 font-bold">Aplicar Desconto</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div>
@@ -1613,20 +1627,50 @@
                     });
                 });
                 
+                // [MODIFICADO] Event listener para adicionar pontos
+                document.getElementById('add-points-btn').addEventListener('click', async (e) => {
+                    const amountInput = document.getElementById('add-points-amount');
+                    const reasonInput = document.getElementById('add-points-reason');
+                    const amount = Math.abs(parseInt(amountInput.value));
+                    const reason = reasonInput.value;
+                    if (!amount || !reason) {
+                        showNotification("Preencha os pontos e o motivo para a adição.");
+                        return;
+                    }
+                    const btn = e.currentTarget;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Adicionando...';
+
+                    await updatePoints(studentId, amount, reason);
+                    
+                    amountInput.value = '';
+                    reasonInput.value = '';
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+
+                // [MODIFICADO] Event listener para descontar pontos
                 document.getElementById('deduct-points-btn').addEventListener('click', async (e) => {
-                    const amount = Math.abs(parseInt(document.getElementById('deduct-points-amount').value)) * -1;
-                    const reason = document.getElementById('deduct-points-reason').value;
+                    const amountInput = document.getElementById('deduct-points-amount');
+                    const reasonInput = document.getElementById('deduct-points-reason');
+                    const amount = Math.abs(parseInt(amountInput.value)) * -1;
+                    const reason = reasonInput.value;
                     if (!amount || !reason) {
                         showNotification("Preencha os pontos e o motivo para o desconto.");
                         return;
                     }
-                    e.target.disabled = true;
-                    e.target.textContent = 'Aplicando...';
-                    await deductPoints(studentId, amount, reason);
-                    document.getElementById('deduct-points-amount').value = '';
-                    document.getElementById('deduct-points-reason').value = '';
-                    e.target.disabled = false;
-                    e.target.textContent = 'Aplicar Desconto';
+                    const btn = e.currentTarget;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Aplicando...';
+                    
+                    await updatePoints(studentId, amount, reason);
+
+                    amountInput.value = '';
+                    reasonInput.value = '';
+                    btn.disabled = false;
+                    btn.textContent = originalText;
                 });
                 
                 document.getElementById('save-notes-btn').addEventListener('click', async (e) => {
@@ -1788,10 +1832,12 @@
                 }
             }
 
-            async function deductPoints(studentId, amount, reason) {
+            // [MODIFICADO] Função unificada para adicionar ou remover pontos
+            async function updatePoints(studentId, amount, reason) {
                 const batch = writeBatch(db);
                 const studentRef = doc(db, "users", studentId);
                 batch.update(studentRef, { xp: increment(amount) });
+                
                 const xpHistoryRef = doc(collection(db, "users", studentId, "xp_history"));
                 batch.set(xpHistoryRef, {
                     points: amount,
@@ -1802,12 +1848,16 @@
                 try {
                     await batch.commit();
                     const studentInCache = allStudentsCache.find(s => s.id === studentId);
-                    if (studentInCache) studentInCache.xp = (studentInCache.xp || 0) + amount;
-                    renderStudentsTable(document.querySelector('#class-tabs .tab-link.active').dataset.turma);
-                    showNotification("Desconto aplicado com sucesso!");
+                    if (studentInCache) {
+                        studentInCache.xp = (studentInCache.xp || 0) + amount;
+                    }
+                    sortAndRenderStudents(currentSortBy); // Atualiza a tabela principal
+                    const action = amount > 0 ? "Adição de pontos" : "Desconto";
+                    showNotification(`${action} aplicado(a) com sucesso!`);
                 } catch (error) {
-                    console.error("Erro ao aplicar desconto: ", error);
-                    showNotification("Falha ao aplicar o desconto.");
+                    const action = amount > 0 ? "adicionar pontos" : "aplicar desconto";
+                    console.error(`Erro ao ${action}: `, error);
+                    showNotification(`Falha ao ${action}.`);
                 }
             }
 
