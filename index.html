@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Login - Matemática em Campo</title>
+    <!-- Fontes e Cores Customizadas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos globais e para componentes específicos */
+        .view { display: none; }
+        .loader {
+            border: 4px solid #424242;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        .dark .loader {
+             border: 4px solid #4a5568;
+             border-top: 4px solid #4CAF50;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans transition-colors duration-300">
+    
+    <!-- Container para o background dinâmico -->
+    <div id="background-container"></div>
+
+    <!-- VISÃO DE CARREGAMENTO/REDIRECIONAMENTO -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p id="loading-message" class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Verificando sessão...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO DE LOGIN -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Escola do Campo Francisco Alves de Paiva</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+  		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+  		    authDomain: "app-matematica-em-campo.firebaseapp.com",
+ 		    projectId: "app-matematica-em-campo",
+  		    storageBucket: "app-matematica-em-campo.firebasestorage.app",
+  		    messagingSenderId: "177907988624",
+  		    appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let app, auth, db;
+
+            // --- Elementos do DOM ---
+            const loadingView = document.getElementById('loading-view');
+            const loadingMessage = document.getElementById('loading-message');
+            const loginView = document.getElementById('login-view');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const loginButton = document.getElementById('login-button');
+
+            // --- Lógica de Tema e Background ---
+            const themeToggleBtn = document.getElementById('theme-toggle-login');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon-login');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon-login');
+            const backgroundContainer = document.getElementById('background-container');
+            const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+            const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+            const themeColorMeta = document.getElementById('theme-color-meta');
+
+            function updateThemeVisuals(isDark) {
+                if (themeToggleDarkIcon) isDark ? themeToggleDarkIcon.classList.add('hidden') : themeToggleDarkIcon.classList.remove('hidden');
+                if (themeToggleLightIcon) isDark ? themeToggleLightIcon.classList.remove('hidden') : themeToggleLightIcon.classList.add('hidden');
+                if (backgroundContainer) {
+                    backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+                }
+            }
+            
+            function updateThemeColorMeta(isDark) {
+                if (themeColorMeta) {
+                    themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
+                }
+            }
+
+            function setTheme(isDark) {
+                 if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+                updateThemeVisuals(isDark);
+                updateThemeColorMeta(isDark);
+            }
+            
+            updateThemeVisuals(document.documentElement.classList.contains('dark'));
+            updateThemeColorMeta(document.documentElement.classList.contains('dark'));
+            
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    setTheme(!document.documentElement.classList.contains('dark'));
+                });
+            }
+
+            // --- Funções de UI ---
+            function showView(viewId) {
+                [loadingView, loginView].forEach(v => v.style.display = 'none');
+                const viewToShow = document.getElementById(viewId);
+                if (viewToShow) {
+                    viewToShow.style.display = 'flex';
+                }
+            }
+
+            // --- Lógica de Login e Redirecionamento ---
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                loginError.textContent = '';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Entrando...';
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    // O onAuthStateChanged vai cuidar do redirecionamento
+                } catch (error) {
+                    loginError.textContent = 'Usuário ou senha inválidos.';
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Entrar';
+                }
+            });
+
+            async function getUserProfile(userId) {
+                const userDocRef = doc(db, 'users', userId);
+                const userDocSnap = await getDoc(userDocRef);
+                return userDocSnap.exists() ? userDocSnap.data() : null;
+            }
+
+            function main() {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            showView('loading-view');
+                            loadingMessage.textContent = 'Verificando perfil...';
+                            
+                            const profile = await getUserProfile(user.uid);
+                            
+                            if (profile && profile.role) {
+                                if (profile.role === 'professor') {
+                                    loadingMessage.textContent = 'Redirecionando para o painel do professor...';
+                                    window.location.href = 'App_Painel_Professor.html';
+                                } else if (profile.role === 'aluno') {
+                                    loadingMessage.textContent = 'Redirecionando para o painel do aluno...';
+                                    window.location.href = 'App_Painel_Aluno.html';
+                                } else {
+                                    // Role desconhecida, desloga e mostra erro
+                                    await signOut(auth);
+                                    loginError.textContent = 'Tipo de usuário desconhecido.';
+                                    showView('login-view');
+                                }
+                            } else {
+                                // Perfil não encontrado, desloga e mostra erro
+                                await signOut(auth);
+                                loginError.textContent = 'Seu perfil não foi encontrado.';
+                                showView('login-view');
+                            }
+                        } else {
+                            // Nenhum usuário logado, mostra a tela de login
+                            showView('login-view');
+                        }
+                    });
+                } catch(error) {
+                    console.error("Erro na Inicialização:", error);
+                    document.body.innerHTML = 'Erro grave ao iniciar a plataforma. Contate o suporte.';
+                }
+            }
+
+            main();
+        });
+    </script>
+</body>
+</html>

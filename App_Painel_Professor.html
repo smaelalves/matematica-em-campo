@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Painel do Professor - Matemática em Campo</title>
+    <!-- Fontes e Cores Customizadas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Adicionado Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos globais e para componentes específicos */
+        .view, .modal { display: none; }
+        .loader {
+            border: 4px solid #424242;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        .dark .loader {
+             border: 4px solid #4a5568;
+             border-top: 4px solid #4CAF50;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .medal-selector {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 4px solid transparent;
+        }
+        .medal-selector img {
+            transition: all 0.2s ease-in-out;
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+        .dark .medal-selector img {
+             opacity: 0.4;
+        }
+        .medal-selector.awarded img {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+        .dark .medal-selector.awarded img {
+            opacity: 1;
+        }
+        .medal-selector.awarded {
+            border-color: #FDD835;
+        }
+        .medal-selector:hover img {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        .sortable-header th {
+            position: relative;
+        }
+        .sortable-header th .sort-arrow {
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 8px;
+            vertical-align: middle;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+        .sortable-header th:hover .sort-arrow {
+            opacity: 0.7;
+        }
+        .sortable-header th.sort-asc .sort-arrow {
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid currentColor;
+            opacity: 1;
+        }
+        .sortable-header th.sort-desc .sort-arrow {
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid currentColor;
+            opacity: 1;
+        }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans transition-colors duration-300">
+    
+    <!-- Container para o background dinâmico -->
+    <div id="background-container"></div>
+
+    <!-- VISÃO 0: CARREGAMENTO -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p id="loading-message" class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando plataforma...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Acesse seu painel de gerenciamento.</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISÃO 3: PAINEL DO PROFESSOR -->
+    <div id="teacher-dashboard-view" class="view bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <div class="flex h-screen">
+            <div class="w-64 bg-azul-ceu/30 dark:bg-dark-card/50 shadow-md flex flex-col backdrop-blur-lg">
+                <div class="p-6 border-b border-marrom-terra/20 dark:border-dark-border">
+                    <h2 class="text-xl font-extrabold text-marrom-terra dark:text-dark-text">Matemática em Campo</h2>
+                    <p id="teacher-name" class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Prof.º Ismael Alves</p>
+                </div>
+                <nav id="teacher-nav" class="flex-grow mt-6 p-4 space-y-2">
+                    <a data-target="dashboard-main" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">Visão Geral</a>
+                    <a data-target="manage-students" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">Gerenciar Alunos</a>
+                    <a data-target="manage-content" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">Conteúdo da Turma</a>
+                    <a data-target="manage-medals" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20">Conquistas e Medalhas</a>
+                    
+                    <div class="pt-6 border-t border-marrom-terra/20 dark:border-dark-border">
+                        <p class="px-4 text-xs font-semibold text-marrom-terra/60 dark:text-dark-text-secondary uppercase mb-2">Outros Apps</p>
+                        <a href="App_Quiz.html" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-200/50 dark:hover:bg-dark-border">App Quiz</a>
+                        <a href="App_Horta.html" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-200/50 dark:hover:bg-dark-border">App Horta</a>
+                        <a href="https://kahoot.it/" target="_blank" class="nav-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-200/50 dark:hover:bg-dark-border">Kahoot!</a>
+                    </div>
+                </nav>
+                <div class="p-4 border-t border-marrom-terra/20 dark:border-dark-border flex items-center justify-between">
+                     <a id="teacher-logout-btn" class="nav-link flex items-center text-red-600 hover:bg-red-100 dark:hover:bg-red-500/20 p-3 rounded-lg w-full">Sair</a>
+                     <button id="theme-toggle-teacher" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-teacher" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-teacher" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <main class="flex-1 overflow-x-hidden overflow-y-auto p-8">
+                    <div id="dashboard-main" class="teacher-content-view">
+                        <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Visão Geral</h3>
+                         <div class="border-b border-marrom-terra/20 dark:border-dark-border">
+                            <nav id="overview-tabs" class="-mb-px flex space-x-6">
+                                <a data-turma="todos" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">Geral</a>
+                                <a data-turma="6" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">6º Ano</a>
+                                <a data-turma="7" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">7º Ano</a>
+                                <a data-turma="8" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">8º Ano</a>
+                                <a data-turma="9" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">9º Ano</a>
+                            </nav>
+                        </div>
+                        <div id="overview-content-wrapper" class="mt-6"></div>
+                    </div>
+                    <div id="manage-students" class="teacher-content-view hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text">Gerenciar Alunos</h3>
+                        </div>
+                        <div class="border-b border-marrom-terra/20 dark:border-dark-border">
+                            <nav id="class-tabs" class="-mb-px flex space-x-6">
+                                <a data-turma="todos" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">Todos</a>
+                                <a data-turma="6" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">6º Ano</a>
+                                <a data-turma="7" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">7º Ano</a>
+                                <a data-turma="8" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">8º Ano</a>
+                                <a data-turma="9" class="tab-link cursor-pointer py-2 px-1 border-b-2 text-marrom-terra/80 dark:text-dark-text-secondary">9º Ano</a>
+                            </nav>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card mt-4 p-4 rounded-lg shadow-md overflow-x-auto">
+                            <table class="w-full text-sm text-left text-marrom-terra dark:text-dark-text-secondary">
+                                <thead class="text-xs uppercase bg-azul-ceu/30 dark:bg-dark-border/30">
+                                    <tr id="students-table-header" class="sortable-header">
+                                        <th class="px-6 py-3 cursor-pointer" data-sort="name">Nome<span class="sort-arrow"></span></th>
+                                        <th class="px-6 py-3 cursor-pointer" data-sort="turma">Turma<span class="sort-arrow"></span></th>
+                                        <th class="px-6 py-3 cursor-pointer" data-sort="xp">XP Total<span class="sort-arrow"></span></th>
+                                        <th class="px-6 py-3 cursor-pointer" data-sort="engagement">Engajamento<span class="sort-arrow"></span></th>
+                                        <th class="px-6 py-3 cursor-pointer" data-sort="learning">Aprendizado (Nota)<span class="sort-arrow"></span></th>
+                                        <th class="px-6 py-3">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="manage-content" class="teacher-content-view hidden">
+                         <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Conteúdo da Turma</h3>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Publicar Novo Aviso</h4>
+                                <form id="announcement-form" class="space-y-4">
+                                    <input id="announcement-title" type="text" placeholder="Título do Aviso" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    <textarea id="announcement-message" placeholder="Mensagem para a turma..." rows="4" class="w-full px-3 py-2 border rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required></textarea>
+                                    <div>
+                                        <label for="announcement-turma" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
+                                        <select id="announcement-turma" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                            <option value="todos">Todas as Turmas</option>
+                                            <option value="6">6º Ano</option>
+                                            <option value="7">7º Ano</option>
+                                            <option value="8">8º Ano</option>
+                                            <option value="9">9º Ano</option>
+                                        </select>
+                                    </div>
+                                    <div id="announcement-student-list-container" class="hidden">
+                                        <label class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Escolha os alunos:</label>
+                                        <div id="announcement-student-list" class="mt-2 p-3 border rounded-md h-32 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-dark-border text-sm"></div>
+                                    </div>
+                                    <button type="submit" id="publish-announcement-btn" class="bg-verde-campo text-white px-4 py-2 rounded-lg hover:bg-verde-campo/90 w-full font-bold">Publicar Aviso</button>
+                                </form>
+                            </div>
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Criar Nova Atividade</h4>
+                                <form id="create-activity-form" class="space-y-4">
+                                    <input id="activity-title" type="text" placeholder="Título da Atividade" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    <textarea id="activity-description" placeholder="Descrição da atividade..." rows="2" class="w-full px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required></textarea>
+                                    <div class="flex gap-4">
+                                        <input id="activity-xp" type="number" placeholder="XP" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                        <input id="activity-due-date" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" placeholder="Prazo de Entrega" class="w-1/2 px-3 py-2 border rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                                    </div>
+                                    <div>
+                                        <label for="activity-turma-select" class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Enviar para a turma:</label>
+                                        <select id="activity-turma-select" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-amarelo-sol focus:border-amarelo-sol dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                            <option value="todos">Todas as Turmas</option>
+                                            <option value="6">6º Ano</option>
+                                            <option value="7">7º Ano</option>
+                                            <option value="8">8º Ano</option>
+                                            <option value="9">9º Ano</option>
+                                        </select>
+                                    </div>
+                                    <div id="activity-student-list-container" class="hidden">
+                                        <label class="text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Escolha os alunos:</label>
+                                        <div id="activity-student-list" class="mt-2 p-3 border rounded-md h-32 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-dark-border text-sm"></div>
+                                    </div>
+                                    <button type="submit" id="publish-activity-btn" class="bg-amarelo-sol text-marrom-terra px-4 py-2 rounded-lg hover:bg-amarelo-sol/90 w-full font-bold">Criar Atividade</button>
+                                </form>
+                            </div>
+                         </div>
+                    </div>
+                    <div id="manage-medals" class="teacher-content-view hidden">
+                        <!-- Conteúdo será injetado pelo JavaScript -->
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAIS -->
+    <div id="student-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-dark-card w-full max-w-3xl rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-marrom-terra/10 dark:border-dark-border flex justify-between items-center">
+                <h3 id="modal-student-name" class="text-xl font-bold text-marrom-terra dark:text-dark-text"></h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // REMOVIDO: Funções e imports do Firebase que eram exclusivos do aluno.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, addDoc, serverTimestamp, Timestamp, writeBatch, increment, updateDoc, deleteField, onSnapshot, limit, arrayRemove, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+  		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+  		    authDomain: "app-matematica-em-campo.firebaseapp.com",
+ 		    projectId: "app-matematica-em-campo",
+  		    storageBucket: "app-matematica-em-campo.firebasestorage.app",
+  		    messagingSenderId: "177907988624",
+  		    appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+        
+        const MEDALS_CATALOG = {
+            linguistica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_bronze.png?alt=media&token=2473fa8a-1a61-4b73-a020-c286ab74b06d', name: 'Voz da Comunidade (Bronze)'},
+            linguistica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_prata.png?alt=media&token=77669b9d-f185-4385-b494-30e57f3e6fd5', name: 'Voz da Comunidade (Prata)'},
+            linguistica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_ouro.png?alt=media&token=afdac6c1-a499-4cdb-93a0-f2e12fb20514', name: 'Voz da Comunidade (Ouro)'},
+            logico_matematica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_bronze.png?alt=media&token=65d8f6b9-3338-4f14-8aa5-31fad2481e4c', name: 'Resolutor da Roça (Bronze)'},
+            logico_matematica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_prata.png?alt=media&token=28b6bee7-1205-4534-9474-f2e8d0731d25', name: 'Resolutor da Roça (Prata)'},
+            logico_matematica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_ouro.png?alt=media&token=34367cb2-f109-4a52-be53-adf3216a401a', name: 'Resolutor da Roça (Ouro)'},
+            espacial_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_bronze.png?alt=media&token=1f769b18-7a47-4a1e-a0cf-659cbebfabe4', name: 'Olhar Criativo (Bronze)'},
+            espacial_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_prata.png?alt=media&token=844bc10b-efe2-4c43-895f-1c433aa1f1c5', name: 'Olhar Criativo (Prata)'},
+            espacial_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_ouro.png?alt=media&token=3ac4c949-b61c-4cf0-a0ee-8a551e3749a3', name: 'Olhar Criativo (Ouro)'},
+            corporal_cinestesica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_bronze.png?alt=media&token=fbd36afd-aa46-41b4-b18c-98d9d2e8ac77', name: 'Corpo que Ensina (Bronze)'},
+            corporal_cinestesica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_prata.png?alt=media&token=37010a46-6f38-4fab-ba96-fc8dedf5880a', name: 'Corpo que Ensina (Prata)'},
+            corporal_cinestesica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_ouro.png?alt=media&token=15d86cef-ed37-4788-b43f-913e74e7d8d8', name: 'Corpo que Ensina (Ouro)'},
+            musical_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_bronze.png?alt=media&token=9cbab8ce-040c-4bbb-b79f-c943397f5c9b', name: 'Cantador do Saber (Bronze)'},
+            musical_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_prata.png?alt=media&token=b25468d9-d0ea-4ffb-bed7-776dbf3d60a6', name: 'Cantador do Saber (Prata)'},
+            musical_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_ouro.png?alt=media&token=205d6a7a-63a7-4dff-8334-636bb12b3ee1', name: 'Cantador do Saber (Ouro)'},
+            interpessoal_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_bronze.png?alt=media&token=cceb140c-e9e9-4886-8ac2-a0cc932cd386', name: 'Companheiro da Terra (Bronze)'},
+            interpessoal_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_prata.png?alt=media&token=7596e85a-eee1-406d-8c9f-4473053d8fd2', name: 'Companheiro da Terra (Prata)'},
+            interpessoal_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_ouro.png?alt=media&token=f87f6207-8795-4e95-ab18-5558aee00aab', name: 'Companheiro da Terra (Ouro)'},
+            intrapessoal_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_bronze.png?alt=media&token=f9dfbf5d-3b6b-4883-a507-813e4510e589', name: 'Raiz do Saber (Bronze)'},
+            intrapessoal_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_prata.png?alt=media&token=97620154-672c-42a1-b929-b8edfb1ea71f', name: 'Raiz do Saber (Prata)'},
+            intrapessoal_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_ouro.png?alt=media&token=ed24754b-362e-4c51-b323-45e400955c00', name: 'Raiz do Saber (Ouro)'},
+            naturalista_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_bronze.png?alt=media&token=5e559ab6-3111-4828-a8fa-09eb9d3f1191', name: 'Guardião da Natureza (Bronze)'},
+            naturalista_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_prata.png?alt=media&token=4cbbab3d-9e80-4bba-926b-cb97243af801', name: 'Guardião da Natureza (Prata)'},
+            naturalista_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_ouro.png?alt=media&token=e2da1c52-201e-4c13-ab25-8752d8197b98', name: 'Guardião da Natureza (Ouro)'},
+            multinteligencia_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_bronze.png?alt=media&token=a70cf22b-755b-43ae-ab0d-4ead67beb5b8', name: 'Sabedoria da Terra (Bronze)'},
+            multinteligencia_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_prata.png?alt=media&token=80bd2084-a94c-469a-bbaf-5036ee10cfff', name: 'Sabedoria da Terra (Prata)'},
+            multinteligencia_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_ouro.png?alt=media&token=fdb2df76-1165-45e2-a0d1-e6b0a85f511f', name: 'Sabedoria da Terra (Ouro)'},
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let app, auth, db;
+            let allStudentsCache = [];
+            let allHistoryCache = []; // Cache para o histórico de todos os alunos
+            let currentSortBy = 'name';
+            let sortDirection = 'asc';
+            let studentChartInstance = null;
+            let overviewChartInstance = null; 
+
+            // --- Elementos do DOM ---
+            const loadingView = document.getElementById('loading-view');
+            const loadingMessage = document.getElementById('loading-message');
+            const loginView = document.getElementById('login-view');
+            const teacherDashboardView = document.getElementById('teacher-dashboard-view');
+            const studentDetailsModal = document.getElementById('student-details-modal');
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationMessage = document.getElementById('notification-message');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const loginButton = document.getElementById('login-button');
+            const teacherLogoutBtn = document.getElementById('teacher-logout-btn');
+            const teacherNav = document.getElementById('teacher-nav');
+            const teacherContentViews = document.querySelectorAll('.teacher-content-view');
+            const studentsTableBody = document.getElementById('students-table-body');
+            const studentsTableHeader = document.getElementById('students-table-header');
+            const classTabs = document.getElementById('class-tabs');
+            const overviewTabs = document.getElementById('overview-tabs');
+            const overviewContentWrapper = document.getElementById('overview-content-wrapper');
+            const announcementForm = document.getElementById('announcement-form');
+            const announcementTurmaSelect = document.getElementById('announcement-turma');
+            const announcementStudentListContainer = document.getElementById('announcement-student-list-container');
+            const announcementStudentListDiv = document.getElementById('announcement-student-list');
+            const createActivityForm = document.getElementById('create-activity-form');
+            const activityTurmaSelect = document.getElementById('activity-turma-select');
+            const studentListContainer = document.getElementById('activity-student-list-container');
+            const studentListDiv = document.getElementById('activity-student-list');
+
+            // --- Lógica de Tema e Background ---
+            const themeToggleBtns = [
+                document.getElementById('theme-toggle-login'),
+                document.getElementById('theme-toggle-teacher')
+            ];
+            const themeToggleDarkIcons = [
+                document.getElementById('theme-toggle-dark-icon-login'),
+                document.getElementById('theme-toggle-dark-icon-teacher')
+            ];
+            const themeToggleLightIcons = [
+                document.getElementById('theme-toggle-light-icon-login'),
+                document.getElementById('theme-toggle-light-icon-teacher')
+            ];
+            const backgroundContainer = document.getElementById('background-container');
+            const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+            const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+            const themeColorMeta = document.getElementById('theme-color-meta');
+
+            function updateThemeVisuals(isDark) {
+                themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
+                themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
+                if(backgroundContainer) {
+                    backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+                }
+            }
+            
+            function updateThemeColorMeta(isDark) {
+                if (themeColorMeta) {
+                    themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
+                }
+            }
+
+            function setTheme(isDark) {
+                 if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+                updateThemeVisuals(isDark);
+                updateThemeColorMeta(isDark);
+            }
+            
+            updateThemeVisuals(document.documentElement.classList.contains('dark'));
+            updateThemeColorMeta(document.documentElement.classList.contains('dark'));
+            
+            themeToggleBtns.forEach(btn => {
+                if(btn) {
+                    btn.addEventListener('click', () => {
+                        setTheme(!document.documentElement.classList.contains('dark'));
+                    });
+                }
+            });
+
+            // --- Funções de data e semana ---
+            function getTodayDDMM() {
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                return `${day}/${month}`;
+            }
+
+            function getWeekId(d = new Date()) {
+                const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+                return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+            }
+
+            // --- Funções de UI ---
+            function showView(viewId) {
+                [loadingView, loginView, teacherDashboardView].forEach(v => v.style.display = 'none');
+                const viewToShow = document.getElementById(viewId);
+                if (viewToShow) {
+                    const flexViews = ['login-view', 'loading-view'];
+                    viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+                }
+            }
+            
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notificationModal.style.display = 'flex';
+            }
+            document.getElementById('notification-ok-btn').addEventListener('click', () => {
+                notificationModal.style.display = 'none';
+            });
+
+            // --- Funções de Autenticação e Dados ---
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                loginError.textContent = '';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Entrando...';
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    loginError.textContent = 'Usuário ou senha inválidos.';
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Entrar';
+                }
+            });
+
+            teacherLogoutBtn.addEventListener('click', () => signOut(auth));
+
+            async function getUserProfile(userId) {
+                const userDocRef = doc(db, 'users', userId);
+                const userDocSnap = await getDoc(userDocRef);
+                return userDocSnap.exists() ? {id: userDocSnap.id, ...userDocSnap.data()} : null;
+            }
+            
+            // --- Funções do Painel do Professor ---
+            async function populateTeacherDashboard(userId, profile) {
+                if(profile && profile.name) {
+                    document.getElementById('teacher-name').textContent = `Prof. ${profile.name}`;
+                }
+                sortAndRenderStudents();
+                renderOverview('todos');
+            }
+
+            function sortAndRenderStudents(sortBy = 'name') {
+                if (sortBy === currentSortBy) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortBy = sortBy;
+                    sortDirection = 'asc';
+                }
+
+                document.querySelectorAll('#students-table-header th[data-sort]').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    if (th.dataset.sort === currentSortBy) {
+                        th.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+
+                allStudentsCache.sort((a, b) => {
+                    let valA, valB;
+
+                    if (sortBy === 'name') {
+                        valA = a.name || '';
+                        valB = b.name || '';
+                    } else if (sortBy === 'turma') {
+                        valA = a.turma || '';
+                        valB = b.turma || '';
+                    } else if (sortBy === 'xp') {
+                        valA = a.xp || 0;
+                        valB = b.xp || 0;
+                    } else if (sortBy === 'engagement') {
+                        valA = (a.activitiesAssignedCount > 0) ? ((a.activitiesCompletedCount || 0) / a.activitiesAssignedCount) : 0;
+                        valB = (b.activitiesAssignedCount > 0) ? ((b.activitiesCompletedCount || 0) / b.activitiesAssignedCount) : 0;
+                    } else if (sortBy === 'learning') {
+                        valA = a.weeklyGrade || 0;
+                        valB = b.weeklyGrade || 0;
+                    }
+
+                    let comparison = 0;
+                    if (valA > valB) comparison = 1;
+                    else if (valA < valB) comparison = -1;
+                    
+                    if (sortBy === 'xp' || sortBy === 'engagement' || sortBy === 'learning') {
+                        comparison *= -1; // Ordena de forma decrescente para estes campos
+                    }
+                    
+                    return sortDirection === 'asc' ? comparison : comparison * -1;
+                });
+                
+                const activeTabElement = document.querySelector('#class-tabs .tab-link.active');
+                const activeTurma = activeTabElement ? activeTabElement.dataset.turma : 'todos';
+                renderStudentsTable(activeTurma);
+            }
+
+            function renderStudentsTable(turma) {
+                studentsTableBody.innerHTML = '';
+                const filteredStudents = turma === 'todos' 
+                    ? allStudentsCache 
+                    : allStudentsCache.filter(s => s.turma == turma);
+                
+                if (filteredStudents.length === 0) {
+                    studentsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aluno encontrado.</td></tr>`;
+                    return;
+                }
+
+                filteredStudents.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b dark:border-dark-border hover:bg-sky-50/50 dark:hover:bg-dark-border/20';
+                    
+                    const engagement = student.activitiesAssignedCount > 0 ? ((student.activitiesCompletedCount || 0) / student.activitiesAssignedCount) * 100 : 0;
+                    const learning = (student.weeklyGrade || 0) * 10; // Nota de 0-10 para porcentagem 0-100
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-marrom-terra dark:text-dark-text">${student.name || 'Nome não definido'}</td>
+                        <td class="px-6 py-4">${student.turma || 'N/A'}º Ano</td>
+                        <td class="px-6 py-4 font-bold">${student.xp || 0}</td>
+                        <td class="px-6 py-4">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700" title="${engagement.toFixed(1)}%">
+                                <div class="bg-verde-campo h-2.5 rounded-full" style="width: ${engagement.toFixed(2)}%"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">${(student.activitiesCompletedCount || 0)}/${(student.activitiesAssignedCount || 0)}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700" title="${learning.toFixed(1)}%">
+                                <div class="bg-amarelo-sol h-2.5 rounded-full" style="width: ${Math.min(learning, 100).toFixed(2)}%"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">${(student.weeklyGrade != null ? student.weeklyGrade.toFixed(1) : 'N/A')} / 10</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <a href="#" data-studentid="${student.id}" class="view-details-btn font-medium text-verde-campo hover:underline">Ver Detalhes</a>
+                        </td>
+                    `;
+                    studentsTableBody.appendChild(row);
+                });
+                
+                document.querySelectorAll('.view-details-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        openStudentModal(e.currentTarget.dataset.studentid);
+                    });
+                });
+            }
+            
+            async function renderOverview(turma) {
+                const filteredStudents = turma === 'todos' 
+                    ? allStudentsCache 
+                    : allStudentsCache.filter(s => s.turma == turma);
+
+                let totalEngagement = 0;
+                let totalLearning = 0;
+                let studentsWithGrade = 0;
+
+                filteredStudents.forEach(student => {
+                    totalEngagement += (student.activitiesAssignedCount > 0) ? ((student.activitiesCompletedCount || 0) / student.activitiesAssignedCount) : 0;
+                    if (student.weeklyGrade != null) {
+                        totalLearning += student.weeklyGrade;
+                        studentsWithGrade++;
+                    }
+                });
+
+                const averageEngagement = filteredStudents.length > 0 ? (totalEngagement / filteredStudents.length) * 100 : 0;
+                const averageLearning = studentsWithGrade > 0 ? (totalLearning / studentsWithGrade) * 10 : 0; // Média da nota * 10 para %
+
+                const birthdayCardHtml = turma === 'todos' ? `
+                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                        <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🎂 Aniversariantes do Dia</h4>
+                        <ul id="overview-birthday-list" class="space-y-3 mt-3"></ul>
+                    </div>
+                ` : '';
+
+                overviewContentWrapper.innerHTML = `
+                    <h4 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">${turma === 'todos' ? 'Visão Geral de Todas as Turmas' : `Visão Geral do ${turma}º Ano`}</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                    <p class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Média de Engajamento</p>
+                                    <p class="text-3xl font-bold text-verde-campo">${averageEngagement.toFixed(1)}%</p>
+                                </div>
+                                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                    <p class="text-sm text-marrom-terra/80 dark:text-dark-text-secondary">Média de Aprendizado</p>
+                                    <p class="text-3xl font-bold text-amarelo-sol">${averageLearning.toFixed(1)}%</p>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🏆 Ranking de XP (Total)</h4>
+                                <ul id="overview-ranking-list" class="space-y-2 mt-3"></ul>
+                            </div>
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">Histórico de Desempenho da Turma</h4>
+                                <div class="h-64"><canvas id="overview-history-chart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="space-y-8">
+                            ${birthdayCardHtml}
+                             <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Avisos Enviados</h4>
+                                <ul id="overview-announcements-list" class="space-y-3 max-h-60 overflow-y-auto pr-2"></ul>
+                            </div>
+                            <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md">
+                                <h4 class="font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Atividades Postadas</h4>
+                                <ul id="overview-activities-list" class="space-y-3 max-h-60 overflow-y-auto pr-2"></ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (turma === 'todos') {
+                    const birthdayList = document.getElementById('overview-birthday-list');
+                    renderOverviewBirthdays(filteredStudents, birthdayList);
+                }
+
+                const topStudents = [...filteredStudents].sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 5);
+                const rankingList = document.getElementById('overview-ranking-list');
+                renderRankingList(rankingList, topStudents);
+                
+                renderOverviewHistoryChart(filteredStudents);
+                
+                const announcementsList = document.getElementById('overview-announcements-list');
+                await renderOverviewAnnouncements(turma, announcementsList);
+
+                const activitiesList = document.getElementById('overview-activities-list');
+                await renderOverviewActivities(turma, activitiesList);
+            }
+
+            function renderOverviewBirthdays(students, listElement) {
+                const todayStr = getTodayDDMM();
+                const birthdayStudents = students.filter(s => s.aniversario === todayStr);
+                
+                listElement.innerHTML = '';
+                if (birthdayStudents.length === 0) {
+                    listElement.innerHTML = '<p class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aniversariante hoje.</p>';
+                } else {
+                    birthdayStudents.forEach(student => {
+                        const photoSrc = student.photoURL || `https://placehold.co/40x40/E2E8F0/8D6E63?text=${student.name ? student.name.charAt(0).toUpperCase() : '?'}`;
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center gap-3 p-2 bg-amarelo-sol/20 rounded-lg';
+                        li.innerHTML = `
+                            <img src="${photoSrc}" class="w-10 h-10 rounded-full object-cover ring-2 ring-amarelo-sol">
+                            <div>
+                                <p class="font-semibold text-marrom-terra dark:text-dark-text">${student.name}</p>
+                                <p class="text-xs text-marrom-terra/70 dark:text-dark-text-secondary">${student.turma}º Ano</p>
+                            </div>
+                        `;
+                        listElement.appendChild(li);
+                    });
+                }
+            }
+            
+            function renderRankingList(listElement, students) {
+                listElement.innerHTML = '';
+                 if (students.length === 0) {
+                    listElement.innerHTML = '<li class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aluno para exibir.</li>';
+                    return;
+                }
+                students.forEach((student, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center text-sm p-2';
+                    const photoSrc = student.photoURL || `https://placehold.co/40x40/E2E8F0/8D6E63?text=${student.name ? student.name.charAt(0).toUpperCase() : '?'}`;
+                    
+                    li.innerHTML = `
+                        <span class="font-semibold w-6 text-marrom-terra dark:text-dark-text-secondary">${index + 1}.</span>
+                        <img src="${photoSrc}" alt="Foto de ${student.name}" class="w-8 h-8 rounded-full mx-2 object-cover ring-2 ring-azul-ceu/50">
+                        <span class="flex-grow text-marrom-terra dark:text-dark-text">${student.name}</span>
+                        <span class="font-bold text-amarelo-sol">${student.xp || 0} XP</span>
+                    `;
+                    listElement.appendChild(li);
+                });
+            }
+
+            function renderOverviewHistoryChart(filteredStudents) {
+                const ctx = document.getElementById('overview-history-chart').getContext('2d');
+                if (overviewChartInstance) {
+                    overviewChartInstance.destroy();
+                }
+
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? '#424242' : '#e0e0e0';
+                const textColor = isDark ? '#e0e0e0' : '#121212';
+                
+                const studentIds = filteredStudents.map(s => s.id);
+                if (studentIds.length === 0) {
+                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    return;
+                }
+
+                const relevantHistory = allHistoryCache.filter(h => studentIds.includes(h.studentId));
+                
+                const aggregatedData = {};
+                relevantHistory.forEach(entry => {
+                    if (!aggregatedData[entry.weekId]) {
+                        aggregatedData[entry.weekId] = {
+                            totalEngagement: 0,
+                            totalLearning: 0,
+                            studentCount: new Set()
+                        };
+                    }
+                    aggregatedData[entry.weekId].totalEngagement += entry.engagementPercentage;
+                    aggregatedData[entry.weekId].totalLearning += entry.learningPercentage;
+                    aggregatedData[entry.weekId].studentCount.add(entry.studentId);
+                });
+
+                const labels = Object.keys(aggregatedData).sort();
+                const recentLabels = labels.slice(-10); // Limita aos últimos 10 registros
+
+                if (recentLabels.length === 0) {
+                    ctx.canvas.parentNode.innerHTML = '<p class="text-sm text-center text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum histórico semanal para exibir.</p>';
+                    return;
+                }
+
+                const engagementData = recentLabels.map(weekId => {
+                    const weekData = aggregatedData[weekId];
+                    return weekData.totalEngagement / weekData.studentCount.size;
+                });
+                const learningData = recentLabels.map(weekId => {
+                    const weekData = aggregatedData[weekId];
+                    return weekData.totalLearning / weekData.studentCount.size;
+                });
+
+                overviewChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: recentLabels.map(l => l.replace('-W', '-S')),
+                        datasets: [
+                            {
+                                label: 'Engajamento Médio (%)',
+                                data: engagementData,
+                                borderColor: '#4CAF50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                fill: true,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Aprendizado Médio (%)',
+                                data: learningData,
+                                borderColor: '#FDD835',
+                                backgroundColor: 'rgba(253, 216, 53, 0.1)',
+                                fill: true,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, max: 100, ticks: { color: textColor }, grid: { color: gridColor } },
+                            x: { 
+                                title: { display: true, text: 'Semanas', color: textColor },
+                                ticks: { color: textColor }, 
+                                grid: { color: gridColor } 
+                            }
+                        },
+                        plugins: { legend: { labels: { color: textColor } } }
+                    }
+                });
+            }
+
+            async function renderOverviewAnnouncements(turma, listElement) {
+                listElement.innerHTML = '<div class="loader mx-auto"></div>';
+                
+                const announcementsQuery = query(collection(db, 'announcements'));
+                const announcementsSnapshot = await getDocs(announcementsQuery);
+                let allAnnouncements = announcementsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const filteredAnnouncements = (turma === 'todos')
+                    ? allAnnouncements
+                    : allAnnouncements.filter(ann => ann.turma === turma || ann.turma === 'todos');
+                
+                filteredAnnouncements.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
+
+                listElement.innerHTML = '';
+                if (filteredAnnouncements.length === 0) {
+                    listElement.innerHTML = '<p class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aviso encontrado.</p>';
+                } else {
+                    filteredAnnouncements.forEach(ann => {
+                        const li = document.createElement('li');
+                        li.className = 'p-3 bg-verde-campo/10 dark:bg-verde-campo/20 rounded-lg text-sm';
+                        
+                        let paraTexto;
+                        if (ann.turma === 'todos') {
+                            paraTexto = 'Todas as Turmas';
+                        } else {
+                            const totalStudentsInClass = allStudentsCache.filter(s => s.turma == ann.turma).length;
+                            if (ann.targetStudents.length < totalStudentsInClass) {
+                                const studentNames = ann.targetStudents.map(id => allStudentsCache.find(s => s.id === id)?.name).filter(Boolean);
+                                paraTexto = studentNames.length > 0 ? studentNames.join(', ') : `Turma ${ann.turma}`;
+                            } else {
+                                paraTexto = `Turma ${ann.turma}`;
+                            }
+                        }
+
+                        li.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-marrom-terra dark:text-dark-text">${ann.title}</p>
+                                    <p class="text-xs text-marrom-terra/60 dark:text-dark-text-secondary/80">Para: ${paraTexto}</p>
+                                </div>
+                                <button data-announcement-id="${ann.id}" class="remove-announcement-btn text-red-500 hover:text-red-700 text-xs font-semibold">Remover</button>
+                            </div>
+                            <p class="text-sm text-marrom-terra/90 dark:text-dark-text-secondary mt-1">${ann.message}</p>
+                            <p class="text-xs text-marrom-terra/50 dark:text-dark-text-secondary/50 mt-2 text-right">${ann.createdAt.toDate().toLocaleDateString('pt-BR')}</p>
+                        `;
+                        listElement.appendChild(li);
+                    });
+                }
+
+                listElement.querySelectorAll('.remove-announcement-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const announcementId = e.currentTarget.dataset.announcementId;
+                        await deleteDoc(doc(db, "announcements", announcementId));
+                        showNotification("Aviso removido!");
+                        const activeTab = document.querySelector('#overview-tabs .tab-link.active').dataset.turma;
+                        renderOverview(activeTab);
+                    });
+                });
+            }
+
+            async function renderOverviewActivities(turma, listElement) {
+                listElement.innerHTML = '<div class="loader mx-auto"></div>';
+
+                const activitiesQuery = query(collection(db, 'activities'));
+                const activitiesSnapshot = await getDocs(activitiesQuery);
+                let allActivities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const filteredActivities = (turma === 'todos')
+                    ? allActivities
+                    : allActivities.filter(act => act.turma === turma || act.turma === 'todos');
+
+                filteredActivities.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
+
+                listElement.innerHTML = '';
+                if (filteredActivities.length === 0) {
+                    listElement.innerHTML = '<p class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhuma atividade encontrada.</p>';
+                } else {
+                    filteredActivities.forEach(act => {
+                        const li = document.createElement('li');
+                        li.className = 'p-3 bg-amarelo-sol/20 rounded-lg text-sm';
+                        
+                        let paraTexto;
+                        if (act.turma === 'todos') {
+                            paraTexto = 'Todas as Turmas';
+                        } else {
+                            const totalStudentsInClass = allStudentsCache.filter(s => s.turma == act.turma).length;
+                            if (act.assignedTo.length < totalStudentsInClass) {
+                                const studentNames = act.assignedTo.map(id => allStudentsCache.find(s => s.id === id)?.name).filter(Boolean);
+                                paraTexto = studentNames.length > 0 ? studentNames.join(', ') : `Turma ${act.turma}`;
+                            } else {
+                                paraTexto = `Turma ${act.turma}`;
+                            }
+                        }
+
+                        li.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-marrom-terra dark:text-dark-text">${act.title}</p>
+                                    <p class="text-xs text-marrom-terra/60 dark:text-dark-text-secondary/80">Para: ${paraTexto}</p>
+                                </div>
+                                <button data-activity-id="${act.id}" class="remove-activity-btn text-red-500 hover:text-red-700 text-xs font-semibold">Remover</button>
+                            </div>
+                            <p class="text-sm text-marrom-terra/90 dark:text-dark-text-secondary mt-1">${act.description}</p>
+                            <p class="text-xs text-marrom-terra/50 dark:text-dark-text-secondary/50 mt-2 text-right">Criada em: ${act.createdAt.toDate().toLocaleDateString('pt-BR')}</p>
+                        `;
+                        listElement.appendChild(li);
+                    });
+                }
+
+                listElement.querySelectorAll('.remove-activity-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const activityId = e.currentTarget.dataset.activityId;
+                        await deleteDoc(doc(db, "activities", activityId));
+                        showNotification("Atividade removida!");
+                        const activeTab = document.querySelector('#overview-tabs .tab-link.active').dataset.turma;
+                        renderOverview(activeTab);
+                    });
+                });
+            }
+
+            function renderMedalsManagementView() {
+                const container = document.getElementById('manage-medals');
+                container.innerHTML = `
+                    <h3 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-6">Gerenciar Conquistas e Medalhas</h3>
+                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-md space-y-4">
+                        <div class="flex items-center gap-8">
+                            <div>
+                                <label for="medal-turma-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary mb-2">1. Selecione uma Turma:</label>
+                                <select id="medal-turma-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                    <option value="">-- Escolha uma turma --</option>
+                                    <option value="6">6º Ano</option>
+                                    <option value="7">7º Ano</option>
+                                    <option value="8">8º Ano</option>
+                                    <option value="9">9º Ano</option>
+                                </select>
+                            </div>
+                            <div id="medal-student-select-container" class="hidden">
+                                <label for="medal-student-select" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary mb-2">2. Selecione um Aluno:</label>
+                                <select id="medal-student-select" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"></select>
+                            </div>
+                        </div>
+                        <div id="student-medals-container" class="mt-6 hidden">
+                            <!-- Medalhas do aluno aparecerão aqui -->
+                        </div>
+                    </div>
+                `;
+
+                const turmaSelect = container.querySelector('#medal-turma-select');
+                const studentSelectContainer = container.querySelector('#medal-student-select-container');
+                const studentSelect = container.querySelector('#medal-student-select');
+                const medalsContainer = container.querySelector('#student-medals-container');
+
+                turmaSelect.addEventListener('change', (e) => {
+                    const turma = e.target.value;
+                    studentSelect.innerHTML = '<option value="">-- Escolha um aluno --</option>';
+                    medalsContainer.classList.add('hidden');
+
+                    if (turma) {
+                        const studentsInClass = allStudentsCache.filter(s => s.turma == turma);
+                        studentsInClass.forEach(s => {
+                            const option = document.createElement('option');
+                            option.value = s.id;
+                            option.textContent = s.name;
+                            studentSelect.appendChild(option);
+                        });
+                        studentSelectContainer.classList.remove('hidden');
+                    } else {
+                        studentSelectContainer.classList.add('hidden');
+                    }
+                });
+
+                studentSelect.addEventListener('change', (e) => {
+                    const studentId = e.target.value;
+                    if (studentId) {
+                        medalsContainer.classList.remove('hidden');
+                        renderStudentMedalsForTeacher(studentId);
+                    } else {
+                        medalsContainer.classList.add('hidden');
+                    }
+                });
+            }
+
+            function renderStudentMedalsForTeacher(studentId) {
+                const student = allStudentsCache.find(s => s.id === studentId);
+                if (!student) return;
+
+                const container = document.getElementById('student-medals-container');
+                const awardedMedals = student.medals || {};
+                
+                let medalsHtml = '';
+                for (const medalId in MEDALS_CATALOG) {
+                    const medal = MEDALS_CATALOG[medalId];
+                    const isAwarded = awardedMedals[medalId] === true;
+                    const awardedClass = isAwarded ? 'awarded' : '';
+
+                    medalsHtml += `
+                        <div class="bg-sky-50/50 dark:bg-dark-bg p-3 rounded-lg flex flex-col items-center text-center shadow">
+                            <div class="medal-selector ${awardedClass} rounded-full" data-medal-id="${medalId}" title="${medal.name}">
+                                <img src="${medal.img}" alt="${medal.name}" class="w-20 h-20 rounded-full object-cover">
+                            </div>
+                            <p class="font-bold text-marrom-terra dark:text-dark-text-secondary mt-2 text-sm">${medal.name}</p>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">${medalsHtml}</div>`;
+
+                container.querySelectorAll('.medal-selector').forEach(selector => {
+                    selector.addEventListener('click', async (e) => {
+                        const medalId = e.currentTarget.dataset.medalId;
+                        await toggleMedal(studentId, medalId);
+                    });
+                });
+            }
+            
+            function styleActiveNavLink(activeLink) {
+                 teacherNav.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active', 'bg-verde-campo/20', 'dark:bg-verde-campo/30', 'text-verde-campo', 'dark:text-white', 'font-bold');
+                });
+                activeLink.classList.add('active', 'bg-verde-campo/20', 'dark:bg-verde-campo/30', 'text-verde-campo', 'dark:text-white', 'font-bold');
+            }
+            
+            function styleActiveTabLink(parentElement, activeLink) {
+                parentElement.querySelectorAll('.tab-link').forEach(link => {
+                    link.classList.remove('active', 'border-verde-campo', 'text-verde-campo', 'dark:text-verde-campo', 'font-bold');
+                    link.classList.add('border-transparent', 'hover:border-gray-300', 'dark:hover:border-dark-border');
+                });
+                activeLink.classList.add('active', 'border-verde-campo', 'text-verde-campo', 'dark:text-verde-campo', 'font-bold');
+                activeLink.classList.remove('border-transparent');
+            }
+
+
+            teacherNav.addEventListener('click', (e) => {
+                const link = e.target.closest('a.nav-link');
+                if (link && link.dataset.target) {
+                    styleActiveNavLink(link);
+                    teacherContentViews.forEach(view => {
+                        view.style.display = view.id === link.dataset.target ? 'block' : 'none';
+                    });
+                    if (link.dataset.target === 'manage-medals') {
+                        renderMedalsManagementView();
+                    }
+                }
+            });
+
+            classTabs.addEventListener('click', (e) => {
+                const link = e.target.closest('a.tab-link');
+                if (link) {
+                    styleActiveTabLink(classTabs, link);
+                    renderStudentsTable(link.dataset.turma);
+                }
+            });
+
+            overviewTabs.addEventListener('click', (e) => {
+                const link = e.target.closest('a.tab-link');
+                if (link) {
+                    styleActiveTabLink(overviewTabs, link);
+                    renderOverview(link.dataset.turma);
+                }
+            });
+
+            studentsTableHeader.addEventListener('click', (e) => {
+                const headerCell = e.target.closest('th');
+                if (headerCell && headerCell.dataset.sort) {
+                    sortAndRenderStudents(headerCell.dataset.sort);
+                }
+            });
+
+            async function openStudentModal(studentId) {
+                const student = allStudentsCache.find(s => s.id === studentId);
+                if (!student) return;
+
+                document.getElementById('modal-student-name').textContent = `Detalhes de ${student.name}`;
+                const modalContent = document.getElementById('modal-content');
+                modalContent.innerHTML = '<div class="loader mx-auto"></div>';
+                studentDetailsModal.style.display = 'flex';
+
+                const activitiesQuery = query(collection(db, 'activities'), where('assignedTo', 'array-contains', studentId));
+                const activitiesSnapshot = await getDocs(activitiesQuery);
+                const pendingActivities = activitiesSnapshot.docs
+                    .map(doc => ({id: doc.id, ...doc.data()}))
+                    .filter(activity => !(activity.completedBy && activity.completedBy.includes(studentId)));
+
+                let activitiesHtml = '';
+                if (pendingActivities.length > 0) {
+                    pendingActivities.forEach(activity => {
+                        activitiesHtml += `
+                            <li class="p-3 bg-amarelo-sol/20 rounded-lg text-sm" data-activity-id="${activity.id}" data-xp="${activity.xp}" data-title="${activity.title}">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-semibold text-marrom-terra dark:text-dark-text">${activity.title}</p>
+                                        <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary">+${activity.xp} XP</p>
+                                    </div>
+                                    <div class="flex gap-2 flex-shrink-0 ml-2">
+                                        <button class="complete-activity-btn bg-verde-campo text-white px-2 py-1 text-xs rounded hover:bg-verde-campo/90">Concluir</button>
+                                        <button class="remove-activity-btn bg-red-500 text-white px-2 py-1 text-xs rounded hover:bg-red-600">Remover</button>
+                                    </div>
+                                </div>
+                            </li>`;
+                    });
+                } else {
+                    activitiesHtml = `<p class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhuma atividade pendente.</p>`;
+                }
+                
+                modalContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Registrar Nota e Finalizar Semana</h4>
+                            <div class="flex gap-2 items-center mb-6">
+                                <input id="weekly-grade-input" type="number" min="0" max="10" step="0.5" placeholder="Nota (0-10)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" value="${student.weeklyGrade != null ? student.weeklyGrade : ''}">
+                                <button id="save-grade-btn" class="bg-verde-campo text-white px-4 py-2 rounded-lg text-sm hover:bg-verde-campo/90 font-bold flex-shrink-0">Salvar</button>
+                            </div>
+
+                            <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Atividades Pendentes</h4>
+                            <ul class="space-y-3">${activitiesHtml}</ul>
+                            
+                            <hr class="my-6 dark:border-dark-border">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-verde-campo mb-3">Adicionar Pontos</h4>
+                                    <div class="space-y-3">
+                                        <input id="add-points-amount" type="number" placeholder="Pontos (ex: 50)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <input id="add-points-reason" type="text" placeholder="Motivo da adição" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <button id="add-points-btn" class="w-full bg-verde-campo text-white px-4 py-2 rounded-lg text-sm hover:bg-verde-campo/90 font-bold">Adicionar Pontos</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-red-500 mb-3">Aplicar Desconto</h4>
+                                    <div class="space-y-3">
+                                        <input id="deduct-points-amount" type="number" placeholder="Pontos (ex: 50)" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <input id="deduct-points-reason" type="text" placeholder="Motivo do desconto" class="w-full px-3 py-2 border rounded-md text-sm dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                                        <button id="deduct-points-btn" class="w-full bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 font-bold">Aplicar Desconto</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Anotações Particulares</h4>
+                            <textarea id="teacher-notes-textarea" rows="5" class="w-full p-2 border rounded-md text-sm text-marrom-terra dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" placeholder="Suas anotações sobre o aluno...">${student.notes || ''}</textarea>
+                            <button id="save-notes-btn" class="mt-2 w-full bg-verde-campo text-white px-4 py-2 rounded-lg text-sm hover:bg-verde-campo/90 font-bold">Salvar Anotação</button>
+                            
+                            <div class="mt-6 pt-6 border-t dark:border-dark-border">
+                                <h4 class="font-semibold text-marrom-terra dark:text-dark-text mb-3">Histórico Semanal</h4>
+                                <div id="chart-container">
+                                    <canvas id="student-history-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const historyQuery = query(collection(db, 'users', student.id, 'weekly_history'), orderBy('endDate', 'asc'));
+                const historySnapshot = await getDocs(historyQuery);
+                const historyData = historySnapshot.docs.map(d => d.data());
+                const recentHistoryData = historyData.slice(-10); 
+
+                const chartContainer = document.getElementById('chart-container');
+                if (recentHistoryData.length > 0) {
+                    const ctx = document.getElementById('student-history-chart').getContext('2d');
+                    if (studentChartInstance) {
+                        studentChartInstance.destroy();
+                    }
+                    studentChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: recentHistoryData.map(d => d.weekId.replace('-W', '-S')),
+                            datasets: [{
+                                label: 'Engajamento (%)',
+                                data: recentHistoryData.map(d => d.engagementPercentage),
+                                borderColor: '#4CAF50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                fill: true,
+                                yAxisID: 'y',
+                                tension: 0.1
+                            }, {
+                                label: 'Aprendizado (Nota %)',
+                                data: recentHistoryData.map(d => d.learningPercentage),
+                                borderColor: '#FDD835',
+                                backgroundColor: 'rgba(253, 216, 53, 0.1)',
+                                fill: true,
+                                yAxisID: 'y',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: { color: document.documentElement.classList.contains('dark') ? '#e0e0e0' : '#121212' },
+                                    grid: { color: document.documentElement.classList.contains('dark') ? '#424242' : '#e0e0e0' }
+                                },
+                                x: {
+                                    title: { 
+                                        display: true, 
+                                        text: 'Semanas', 
+                                        color: document.documentElement.classList.contains('dark') ? '#e0e0e0' : '#121212'
+                                    },
+                                    ticks: { color: document.documentElement.classList.contains('dark') ? '#e0e0e0' : '#121212' },
+                                    grid: { color: document.documentElement.classList.contains('dark') ? '#424242' : '#e0e0e0' }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: document.documentElement.classList.contains('dark') ? '#e0e0e0' : '#121212'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    chartContainer.innerHTML = '<p class="text-sm text-center text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum histórico semanal para exibir.</p>';
+                }
+
+                document.getElementById('save-grade-btn').addEventListener('click', async (e) => {
+                    const gradeInput = document.getElementById('weekly-grade-input');
+                    const grade = parseFloat(gradeInput.value);
+                    if (isNaN(grade) || grade < 0 || grade > 10) {
+                        showNotification("Por favor, insira uma nota válida entre 0 e 10.");
+                        return;
+                    }
+                    const btn = e.currentTarget;
+                    btn.disabled = true;
+                    btn.textContent = 'Salvando...';
+                    await saveGradeAndFinalizeWeek(studentId, grade);
+                });
+
+                modalContent.querySelectorAll('.complete-activity-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const activityItem = e.target.closest('li');
+                        const activityId = activityItem.dataset.activityId;
+                        const xp = parseInt(activityItem.dataset.xp);
+                        const title = activityItem.dataset.title;
+                        e.target.disabled = true;
+                        e.target.textContent = '...';
+                        await completeActivity(activityId, studentId, xp, title);
+                        openStudentModal(studentId);
+                    });
+                });
+
+                modalContent.querySelectorAll('.remove-activity-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const activityItem = e.target.closest('li');
+                        const activityId = activityItem.dataset.activityId;
+                        e.target.disabled = true;
+                        e.target.textContent = '...';
+                        await removeActivity(activityId, studentId);
+                        openStudentModal(studentId);
+                    });
+                });
+                
+                document.getElementById('add-points-btn').addEventListener('click', async (e) => {
+                    const amountInput = document.getElementById('add-points-amount');
+                    const reasonInput = document.getElementById('add-points-reason');
+                    const amount = Math.abs(parseInt(amountInput.value));
+                    const reason = reasonInput.value;
+                    if (!amount || !reason) {
+                        showNotification("Preencha os pontos e o motivo para a adição.");
+                        return;
+                    }
+                    const btn = e.currentTarget;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Adicionando...';
+
+                    await updatePoints(studentId, amount, reason);
+                    
+                    amountInput.value = '';
+                    reasonInput.value = '';
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+
+                document.getElementById('deduct-points-btn').addEventListener('click', async (e) => {
+                    const amountInput = document.getElementById('deduct-points-amount');
+                    const reasonInput = document.getElementById('deduct-points-reason');
+                    const amount = Math.abs(parseInt(amountInput.value)) * -1;
+                    const reason = reasonInput.value;
+                    if (!amount || !reason) {
+                        showNotification("Preencha os pontos e o motivo para o desconto.");
+                        return;
+                    }
+                    const btn = e.currentTarget;
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Aplicando...';
+                    
+                    await updatePoints(studentId, amount, reason);
+
+                    amountInput.value = '';
+                    reasonInput.value = '';
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                });
+                
+                document.getElementById('save-notes-btn').addEventListener('click', async (e) => {
+                    const notes = document.getElementById('teacher-notes-textarea').value;
+                    e.target.disabled = true;
+                    e.target.textContent = 'Salvando...';
+                    await saveTeacherNotes(studentId, notes);
+                    e.target.disabled = false;
+                    e.target.textContent = 'Salvar Anotação';
+                });
+            }
+
+            async function toggleMedal(studentId, medalId) {
+                const studentRef = doc(db, "users", studentId);
+                const student = allStudentsCache.find(s => s.id === studentId);
+                const currentMedals = student.medals || {};
+                const isCurrentlyAwarded = currentMedals[medalId] === true;
+                const updateData = {};
+                
+                if (isCurrentlyAwarded) {
+                    updateData[`medals.${medalId}`] = deleteField();
+                } else {
+                    updateData[`medals.${medalId}`] = true;
+                }
+
+                try {
+                    await updateDoc(studentRef, updateData);
+                    const studentInCache = allStudentsCache.find(s => s.id === studentId);
+                    if (studentInCache) {
+                        if (!studentInCache.medals) studentInCache.medals = {};
+                        if (isCurrentlyAwarded) {
+                            delete studentInCache.medals[medalId];
+                        } else {
+                            studentInCache.medals[medalId] = true;
+                        }
+                    }
+                    showNotification("Medalha atualizada!");
+                    renderStudentMedalsForTeacher(studentId);
+                } catch (error) {
+                    console.error("Erro ao atualizar medalha:", error);
+                    showNotification("Falha ao atualizar a medalha.");
+                    renderStudentMedalsForTeacher(studentId);
+                }
+            }
+
+            async function saveTeacherNotes(studentId, notes) {
+                const studentRef = doc(db, "users", studentId);
+                try {
+                    await updateDoc(studentRef, { notes: notes });
+                    const studentInCache = allStudentsCache.find(s => s.id === studentId);
+                    if (studentInCache) studentInCache.notes = notes;
+                    showNotification("Anotação salva com sucesso!");
+                } catch (error) {
+                    console.error("Erro ao salvar anotação:", error);
+                    showNotification("Falha ao salvar a anotação.");
+                }
+            }
+            
+            async function saveGradeAndFinalizeWeek(studentId, grade) {
+                const student = allStudentsCache.find(s => s.id === studentId);
+                if (!student) return;
+
+                const studentRef = doc(db, "users", studentId);
+                const weekId = getWeekId();
+                const historyRef = doc(db, 'users', studentId, 'weekly_history', weekId);
+
+                const engagement = (student.activitiesAssignedCount > 0)
+                    ? ((student.activitiesCompletedCount || 0) / student.activitiesAssignedCount) * 100
+                    : 0;
+                
+                const learning = grade * 10;
+
+                const batch = writeBatch(db);
+
+                batch.update(studentRef, { weeklyGrade: grade });
+
+                const historyEntry = {
+                    studentId: studentId,
+                    weekId: weekId,
+                    endDate: serverTimestamp(),
+                    grade: grade,
+                    learningPercentage: learning,
+                    engagementPercentage: engagement,
+                    activitiesAssigned: student.activitiesAssignedCount || 0,
+                    activitiesCompleted: student.activitiesCompletedCount || 0,
+                };
+                batch.set(historyRef, historyEntry);
+
+                try {
+                    await batch.commit();
+                    
+                    student.weeklyGrade = grade;
+                    const historyCacheIndex = allHistoryCache.findIndex(h => h.studentId === studentId && h.weekId === weekId);
+                    if(historyCacheIndex > -1) {
+                        allHistoryCache[historyCacheIndex] = historyEntry;
+                    } else {
+                        allHistoryCache.push(historyEntry);
+                    }
+
+                    sortAndRenderStudents(currentSortBy);
+                    openStudentModal(studentId);
+                    showNotification("Nota e histórico da semana salvos!");
+
+                } catch (error) {
+                    console.error("Erro ao finalizar semana:", error);
+                    showNotification("Falha ao salvar os dados da semana.");
+                    const btn = document.getElementById('save-grade-btn');
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'Salvar';
+                    }
+                }
+            }
+
+            async function completeActivity(activityId, studentId, xp, reason) {
+                const batch = writeBatch(db);
+                const studentRef = doc(db, "users", studentId);
+                batch.update(studentRef, { 
+                    xp: increment(xp),
+                    activitiesCompletedCount: increment(1)
+                });
+                
+                const xpHistoryRef = doc(collection(db, "users", studentId, "xp_history"));
+                batch.set(xpHistoryRef, {
+                    points: xp,
+                    reason: `Atividade: ${reason}`,
+                    date: serverTimestamp()
+                });
+
+                const activityRef = doc(db, "activities", activityId);
+                batch.update(activityRef, {
+                    completedBy: arrayUnion(studentId)
+                });
+
+                try {
+                    await batch.commit();
+                    const studentInCache = allStudentsCache.find(s => s.id === studentId);
+                    if (studentInCache) {
+                        studentInCache.xp = (studentInCache.xp || 0) + xp;
+                        studentInCache.activitiesCompletedCount = (studentInCache.activitiesCompletedCount || 0) + 1;
+                    }
+                    sortAndRenderStudents(currentSortBy);
+                } catch (error) {
+                    console.error("Erro ao concluir atividade: ", error);
+                    showNotification("Falha ao concluir a atividade.");
+                }
+            }
+            
+            async function removeActivity(activityId, studentId) {
+                const activityRef = doc(db, "activities", activityId);
+                try {
+                    await updateDoc(activityRef, {
+                        assignedTo: arrayRemove(studentId)
+                    });
+                    showNotification("Atividade removida para este aluno.");
+                } catch (error) {
+                    console.error("Erro ao remover atividade:", error);
+                    showNotification("Falha ao remover a atividade.");
+                }
+            }
+
+            async function updatePoints(studentId, amount, reason) {
+                const batch = writeBatch(db);
+                const studentRef = doc(db, "users", studentId);
+                batch.update(studentRef, { xp: increment(amount) });
+                
+                const xpHistoryRef = doc(collection(db, "users", studentId, "xp_history"));
+                batch.set(xpHistoryRef, {
+                    points: amount,
+                    reason: reason,
+                    date: serverTimestamp()
+                });
+
+                try {
+                    await batch.commit();
+                    const studentInCache = allStudentsCache.find(s => s.id === studentId);
+                    if (studentInCache) {
+                        studentInCache.xp = (studentInCache.xp || 0) + amount;
+                    }
+                    sortAndRenderStudents(currentSortBy);
+                    const action = amount > 0 ? "Adição de pontos" : "Desconto";
+                    showNotification(`${action} aplicado(a) com sucesso!`);
+                } catch (error) {
+                    const action = amount > 0 ? "adicionar pontos" : "aplicar desconto";
+                    console.error(`Erro ao ${action}: `, error);
+                    showNotification(`Falha ao ${action}.`);
+                }
+            }
+
+
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                studentDetailsModal.style.display = 'none';
+            });
+            
+            announcementForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('publish-announcement-btn');
+                btn.disabled = true;
+                btn.textContent = 'Publicando...';
+
+                const selectedTurma = announcementTurmaSelect.value;
+                let targetStudents = [];
+
+                if (selectedTurma === 'todos') {
+                    targetStudents.push('todos');
+                } else {
+                    const selectedStudentCheckboxes = announcementStudentListDiv.querySelectorAll('input.student-checkbox:checked');
+                    targetStudents = Array.from(selectedStudentCheckboxes).map(cb => cb.value);
+                }
+
+                if (targetStudents.length === 0 && selectedTurma !== 'todos') {
+                    showNotification('Selecione pelo menos um aluno.');
+                    btn.disabled = false;
+                    btn.textContent = 'Publicar Aviso';
+                    return;
+                }
+
+                const announcement = {
+                    title: document.getElementById('announcement-title').value,
+                    message: document.getElementById('announcement-message').value,
+                    targetStudents: targetStudents,
+                    turma: selectedTurma,
+                    createdAt: serverTimestamp(),
+                    authorId: auth.currentUser.uid
+                };
+
+                try {
+                    await addDoc(collection(db, "announcements"), announcement);
+                    announcementForm.reset();
+                    announcementStudentListContainer.classList.add('hidden');
+                    showNotification('Aviso publicado com sucesso!');
+                } catch (error) {
+                    console.error("Erro ao publicar aviso: ", error);
+                    showNotification('Falha ao publicar o aviso.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Publicar Aviso';
+                }
+            });
+
+            createActivityForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('publish-activity-btn');
+                btn.disabled = true;
+                btn.textContent = 'Criando...';
+
+                const selectedTurma = activityTurmaSelect.value;
+                let assignedTo = [];
+
+                if (selectedTurma === 'todos') {
+                    assignedTo = allStudentsCache.map(student => student.id);
+                } else {
+                    const selectedStudentCheckboxes = studentListDiv.querySelectorAll('input.student-checkbox:checked');
+                    assignedTo = Array.from(selectedStudentCheckboxes).map(cb => cb.value);
+                }
+
+                if (assignedTo.length === 0) {
+                    showNotification('Selecione pelo menos um aluno ou "Todas as Turmas".');
+                    btn.disabled = false;
+                    btn.textContent = 'Criar Atividade';
+                    return;
+                }
+
+                const activity = {
+                    title: document.getElementById('activity-title').value,
+                    description: document.getElementById('activity-description').value,
+                    xp: parseInt(document.getElementById('activity-xp').value),
+                    dueDate: Timestamp.fromDate(new Date(document.getElementById('activity-due-date').value)),
+                    assignedTo: assignedTo,
+                    turma: selectedTurma, 
+                    createdAt: serverTimestamp(),
+                    authorId: auth.currentUser.uid,
+                    status: 'pending',
+                    completedBy: []
+                };
+
+                try {
+                    const batch = writeBatch(db);
+                    const activityRef = doc(collection(db, "activities"));
+                    batch.set(activityRef, activity);
+
+                    assignedTo.forEach(studentId => {
+                        const studentRef = doc(db, "users", studentId);
+                        batch.update(studentRef, {
+                            activitiesAssignedCount: increment(1)
+                        });
+                        const studentInCache = allStudentsCache.find(s => s.id === studentId);
+                        if (studentInCache) {
+                            studentInCache.activitiesAssignedCount = (studentInCache.activitiesAssignedCount || 0) + 1;
+                        }
+                    });
+
+                    await batch.commit();
+
+                    createActivityForm.reset();
+                    studentListContainer.classList.add('hidden');
+                    showNotification('Atividade criada com sucesso!');
+                    sortAndRenderStudents(currentSortBy);
+                } catch (error) {
+                    console.error("Erro ao criar atividade: ", error);
+                    showNotification('Falha ao criar a atividade.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Criar Atividade';
+                }
+            });
+            
+            function setupStudentSelector(turmaSelect, studentListContainer, studentListDiv) {
+                 turmaSelect.addEventListener('change', (e) => {
+                    const selectedTurma = e.target.value;
+                    studentListDiv.innerHTML = ''; 
+
+                    if (!selectedTurma || selectedTurma === 'todos') {
+                        studentListContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    const studentsInClass = allStudentsCache.filter(s => s.turma == selectedTurma);
+                    
+                    if (studentsInClass.length > 0) {
+                        const selectAllLabel = document.createElement('label');
+                        selectAllLabel.className = 'flex items-center font-semibold pb-2 border-b mb-2 text-marrom-terra dark:text-dark-text-secondary';
+                        selectAllLabel.innerHTML = `<input type="checkbox" class="select-all-students rounded mr-2 text-verde-campo focus:ring-verde-campo"> Selecionar Todos`;
+                        studentListDiv.appendChild(selectAllLabel);
+
+                        studentsInClass.forEach(student => {
+                            const label = document.createElement('label');
+                            label.className = 'flex items-center text-marrom-terra dark:text-dark-text-secondary';
+                            label.innerHTML = `<input type="checkbox" name="student_checkbox" value="${student.id}" class="student-checkbox rounded mr-2 text-verde-campo focus:ring-verde-campo"> ${student.name}`;
+                            studentListDiv.appendChild(label);
+                        });
+
+                        studentListDiv.querySelector('.select-all-students').addEventListener('change', (event) => {
+                            const isChecked = event.target.checked;
+                            studentListDiv.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                                checkbox.checked = isChecked;
+                            });
+                        });
+
+                        studentListContainer.classList.remove('hidden');
+                    } else {
+                        studentListDiv.innerHTML = `<p class="text-xs text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aluno encontrado para esta turma.</p>`;
+                        studentListContainer.classList.remove('hidden');
+                    }
+                });
+            }
+
+            setupStudentSelector(activityTurmaSelect, studentListContainer, studentListDiv);
+            setupStudentSelector(announcementTurmaSelect, announcementStudentListContainer, announcementStudentListDiv);
+
+            async function prepareForNewWeek() {
+                const now = new Date();
+                const currentWeekId = getWeekId(now);
+                const batch = writeBatch(db);
+                let updatesNeeded = false;
+
+                for (const student of allStudentsCache) {
+                    const lastReset = student.lastResetDate ? student.lastResetDate.toDate() : new Date(0);
+                    const lastResetWeekId = getWeekId(lastReset);
+
+                    if (currentWeekId !== lastResetWeekId) {
+                        updatesNeeded = true;
+                        const studentRef = doc(db, 'users', student.id);
+
+                        batch.update(studentRef, {
+                            weeklyGrade: deleteField(),
+                            lastResetDate: serverTimestamp()
+                        });
+
+                        delete student.weeklyGrade;
+                        student.lastResetDate = new Timestamp(Math.floor(now.getTime() / 1000), 0);
+                    }
+                }
+
+                if (updatesNeeded) {
+                    loadingMessage.textContent = 'Iniciando nova semana letiva...';
+                    console.log("Iniciando nova semana para os alunos...");
+                    try {
+                        await batch.commit();
+                        console.log("Notas semanais resetadas com sucesso.");
+                    } catch (error) {
+                        console.error("Erro ao resetar notas semanais:", error);
+                    }
+                }
+            }
+
+            async function loadAllHistory() {
+                loadingMessage.textContent = 'Carregando histórico de desempenho...';
+                allHistoryCache = [];
+                const historyPromises = allStudentsCache.map(async (student) => {
+                    const historyQuery = query(collection(db, 'users', student.id, 'weekly_history'));
+                    const historySnapshot = await getDocs(historyQuery);
+                    historySnapshot.forEach(doc => {
+                        allHistoryCache.push({
+                            studentId: student.id,
+                            weekId: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                });
+                await Promise.all(historyPromises);
+            }
+
+            // --- Função Principal ---
+            function main() {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            loadingMessage.textContent = 'Verificando seu perfil...';
+                            const profile = await getUserProfile(user.uid);
+                            
+                            // Este app é apenas para professores.
+                            if (profile && profile.role === 'professor') {
+                                loadingMessage.textContent = 'Carregando dados dos alunos...';
+                                const studentsQuery = query(collection(db, "users"), where("role", "==", "aluno"));
+                                const querySnapshot = await getDocs(studentsQuery);
+                                allStudentsCache = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                                await prepareForNewWeek();
+                                await loadAllHistory();
+                                await populateTeacherDashboard(user.uid, profile);
+                                
+                                showView('teacher-dashboard-view');
+                                styleActiveNavLink(teacherNav.querySelector('a[data-target="dashboard-main"]'));
+                                styleActiveTabLink(overviewTabs, overviewTabs.querySelector('a[data-turma="todos"]'));
+                                styleActiveTabLink(classTabs, classTabs.querySelector('a[data-turma="todos"]'));
+                            } else {
+                                // Se não for professor, desloga e mostra erro.
+                                await signOut(auth);
+                                showView('login-view');
+                                document.getElementById('login-error').textContent = "Acesso permitido apenas para professores.";
+                            }
+                        } else {
+                            // Se não houver usuário logado, mostra a tela de login.
+                            allStudentsCache = [];
+                            allHistoryCache = [];
+                            showView('login-view');
+                        }
+                    });
+                } catch(error) {
+                    console.error("Erro na Inicialização:", error);
+                    document.body.innerHTML = 'Erro grave ao iniciar a plataforma. Contate o suporte.';
+                }
+            }
+
+            main();
+        });
+    </script>
+</body>
+</html>

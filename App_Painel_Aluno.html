@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Painel do Aluno - Matemática em Campo</title>
+    <!-- Fontes e Cores Customizadas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos globais e para componentes específicos */
+        .view, .modal { display: none; }
+        .loader {
+            border: 4px solid #424242;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        .dark .loader {
+             border: 4px solid #4a5568;
+             border-top: 4px solid #4CAF50;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar-inner {
+            background-color: #4CAF50;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+        .xp-gain { color: #4CAF50; }
+        .xp-loss { color: #dc2626; }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans transition-colors duration-300">
+    
+    <!-- Container para o background dinâmico -->
+    <div id="background-container"></div>
+
+    <!-- VISÃO 0: CARREGAMENTO -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p id="loading-message" class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando plataforma...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Acesse seu painel de aprendizado.</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISÃO 2: PAINEL DO ALUNO -->
+    <div id="student-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-azul-ceu/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Meu Painel</h1>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-student" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-student" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <button id="student-logout-btn" class="text-sm font-bold text-marrom-terra dark:text-dark-text-secondary hover:bg-white/50 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
+            </div>
+        </header>
+        <main class="flex-grow py-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                            <div class="flex items-center space-x-5">
+                                <div class="flex-shrink-0 relative group">
+                                    <img id="student-photo" class="h-24 w-24 rounded-full object-cover ring-4 ring-verde-campo/50" src="https://placehold.co/100x100/E2E8F0/4A5568?text=..." alt="Foto do Aluno">
+                                    <label for="photo-upload-input" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                                        <span class="text-white text-sm font-semibold">Trocar Foto</span>
+                                    </label>
+                                    <input type="file" id="photo-upload-input" class="hidden" accept="image/*">
+                                </div>
+                                <div class="flex-1">
+                                    <h2 id="student-name" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Carregando...</h2>
+                                    <p id="student-level" class="text-md font-bold text-verde-campo">Nível 1 - Iniciante</p>
+                                    <div class="mt-3">
+                                        <div class="flex justify-between text-sm font-medium text-marrom-terra/80 dark:text-dark-text-secondary mb-1">
+                                            <p>Progresso Total</p>
+                                            <p id="xp-progress-text">0 / 200 XP</p>
+                                        </div>
+                                        <div class="progress-bar bg-gray-200 dark:bg-gray-700 rounded-full h-4 w-full overflow-hidden">
+                                            <div id="xp-progress-bar" class="progress-bar-inner" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="photo-upload-status" class="text-sm mt-4 text-center"></div>
+                            <hr class="my-6 border-marrom-terra/10 dark:border-dark-border">
+                            <div>
+                                <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Últimas 5 Atualizações de Pontos</h3>
+                                <ul id="xp-history-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></ul>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                             <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">🏆 Rankings de XP</h3>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                 <div>
+                                     <h4 class="font-semibold text-marrom-terra dark:text-dark-text-secondary mb-3 border-b-2 border-verde-campo/50 pb-2">Ranking da Turma (XP Total)</h4>
+                                     <ul id="class-ranking-list" class="space-y-2 mt-3"></ul>
+                                 </div>
+                                 <div>
+                                     <h4 class="font-semibold text-marrom-terra dark:text-dark-text-secondary mb-3 border-b-2 border-amarelo-sol/50 pb-2">Ranking Geral (XP Total)</h4>
+                                     <ul id="general-ranking-list" class="space-y-2 mt-3"></ul>
+                                 </div>
+                             </div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                             <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">📝 Minhas Atividades</h3>
+                             <ul id="activities-list" class="space-y-4"></ul>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                             <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">🚨 Mural de Avisos</h3>
+                             <ul id="announcements-list" class="space-y-4"></ul>
+                        </div>
+                    </div>
+                    <div id="student-right-column" class="space-y-8">
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                             <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Minhas Conquistas</h3>
+                             <div id="student-medals-list" class="grid grid-cols-3 gap-4"></div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md">
+                             <h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Outros Aplicativos</h3>
+                             <div class="flex justify-around items-center pt-2">
+                                 <a href="App_Quiz.html" class="flex flex-col items-center text-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200">
+                                     <img src="https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fappquiz.png?alt=media&token=9b101d42-b099-4716-831e-e6359787f8c5" alt="Ícone do App Quiz" class="w-16 h-16 rounded-xl shadow-md mb-2">
+                                     <span class="text-sm font-bold text-marrom-terra dark:text-dark-text-secondary">App Quiz</span>
+                                 </a>
+                                 <a href="App_Horta.html" class="flex flex-col items-center text-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200">
+                                     <img src="https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fapphorta.png?alt=media&token=9680235b-de69-42dd-8dd9-1ec8a8f94f83" alt="Ícone do App Horta" class="w-16 h-16 rounded-xl shadow-md mb-2">
+                                     <span class="text-sm font-bold text-marrom-terra dark:text-dark-text-secondary">App Horta</span>
+                                 </a>
+                                 <a href="https://kahoot.it/" target="_blank" class="flex flex-col items-center text-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200">
+                                     <img src="https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fkahoot.png?alt=media&token=282be3db-9c5d-42c6-bd6a-803a93f38439" alt="Ícone do Kahoot" class="w-16 h-16 rounded-xl shadow-md mb-2">
+                                     <span class="text-sm font-bold text-marrom-terra dark:text-dark-text-secondary">Kahoot!</span>
+                                 </a>
+                             </div>
+                        </div>
+                        <!-- Widget de aniversário para outros alunos aparecerá aqui -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE NOTIFICAÇÃO (GENÉRICO) -->
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // REMOVIDO: Funções e imports do Firebase que eram exclusivos do professor.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, onSnapshot, limit, Timestamp, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        const firebaseConfig = {
+  		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+  		    authDomain: "app-matematica-em-campo.firebaseapp.com",
+ 		    projectId: "app-matematica-em-campo",
+  		    storageBucket: "app-matematica-em-campo.firebasestorage.app",
+  		    messagingSenderId: "177907988624",
+  		    appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+        
+        const MEDALS_CATALOG = {
+            linguistica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_bronze.png?alt=media&token=2473fa8a-1a61-4b73-a020-c286ab74b06d', name: 'Voz da Comunidade (Bronze)'},
+            linguistica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_prata.png?alt=media&token=77669b9d-f185-4385-b494-30e57f3e6fd5', name: 'Voz da Comunidade (Prata)'},
+            linguistica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flinguistica_ouro.png?alt=media&token=afdac6c1-a499-4cdb-93a0-f2e12fb20514', name: 'Voz da Comunidade (Ouro)'},
+            logico_matematica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_bronze.png?alt=media&token=65d8f6b9-3338-4f14-8aa5-31fad2481e4c', name: 'Resolutor da Roça (Bronze)'},
+            logico_matematica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_prata.png?alt=media&token=28b6bee7-1205-4534-9474-f2e8d0731d25', name: 'Resolutor da Roça (Prata)'},
+            logico_matematica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Flogico-matematica_ouro.png?alt=media&token=34367cb2-f109-4a52-be53-adf3216a401a', name: 'Resolutor da Roça (Ouro)'},
+            espacial_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_bronze.png?alt=media&token=1f769b18-7a47-4a1e-a0cf-659cbebfabe4', name: 'Olhar Criativo (Bronze)'},
+            espacial_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_prata.png?alt=media&token=844bc10b-efe2-4c43-895f-1c433aa1f1c5', name: 'Olhar Criativo (Prata)'},
+            espacial_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fespacial_ouro.png?alt=media&token=3ac4c949-b61c-4cf0-a0ee-8a551e3749a3', name: 'Olhar Criativo (Ouro)'},
+            corporal_cinestesica_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_bronze.png?alt=media&token=fbd36afd-aa46-41b4-b18c-98d9d2e8ac77', name: 'Corpo que Ensina (Bronze)'},
+            corporal_cinestesica_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_prata.png?alt=media&token=37010a46-6f38-4fab-ba96-fc8dedf5880a', name: 'Corpo que Ensina (Prata)'},
+            corporal_cinestesica_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fcorporal-cinestesica_ouro.png?alt=media&token=15d86cef-ed37-4788-b43f-913e74e7d8d8', name: 'Corpo que Ensina (Ouro)'},
+            musical_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_bronze.png?alt=media&token=9cbab8ce-040c-4bbb-b79f-c943397f5c9b', name: 'Cantador do Saber (Bronze)'},
+            musical_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_prata.png?alt=media&token=b25468d9-d0ea-4ffb-bed7-776dbf3d60a6', name: 'Cantador do Saber (Prata)'},
+            musical_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmusical_ouro.png?alt=media&token=205d6a7a-63a7-4dff-8334-636bb12b3ee1', name: 'Cantador do Saber (Ouro)'},
+            interpessoal_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_bronze.png?alt=media&token=cceb140c-e9e9-4886-8ac2-a0cc932cd386', name: 'Companheiro da Terra (Bronze)'},
+            interpessoal_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_prata.png?alt=media&token=7596e85a-eee1-406d-8c9f-4473053d8fd2', name: 'Companheiro da Terra (Prata)'},
+            interpessoal_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Finterpessoal_ouro.png?alt=media&token=f87f6207-8795-4e95-ab18-5558aee00aab', name: 'Companheiro da Terra (Ouro)'},
+            intrapessoal_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_bronze.png?alt=media&token=f9dfbf5d-3b6b-4883-a507-813e4510e589', name: 'Raiz do Saber (Bronze)'},
+            intrapessoal_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_prata.png?alt=media&token=97620154-672c-42a1-b929-b8edfb1ea71f', name: 'Raiz do Saber (Prata)'},
+            intrapessoal_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fintrapessoal_ouro.png?alt=media&token=ed24754b-362e-4c51-b323-45e400955c00', name: 'Raiz do Saber (Ouro)'},
+            naturalista_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_bronze.png?alt=media&token=5e559ab6-3111-4828-a8fa-09eb9d3f1191', name: 'Guardião da Natureza (Bronze)'},
+            naturalista_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_prata.png?alt=media&token=4cbbab3d-9e80-4bba-926b-cb97243af801', name: 'Guardião da Natureza (Prata)'},
+            naturalista_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fnaturalista_ouro.png?alt=media&token=e2da1c52-201e-4c13-ab25-8752d8197b98', name: 'Guardião da Natureza (Ouro)'},
+            multinteligencia_bronze: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_bronze.png?alt=media&token=a70cf22b-755b-43ae-ab0d-4ead67beb5b8', name: 'Sabedoria da Terra (Bronze)'},
+            multinteligencia_silver: { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_prata.png?alt=media&token=80bd2084-a94c-469a-bbaf-5036ee10cfff', name: 'Sabedoria da Terra (Prata)'},
+            multinteligencia_gold:   { img: 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/medals%2Fmultinteligencia_ouro.png?alt=media&token=fdb2df76-1165-45e2-a0d1-e6b0a85f511f', name: 'Sabedoria da Terra (Ouro)'},
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let app, auth, db, storage;
+            let allStudentsCache = []; // Cache para todos os alunos, usado para rankings e aniversários
+            let studentProfileUnsubscribe = null; // Listener para o perfil do aluno logado
+
+            // --- Elementos do DOM ---
+            const loadingView = document.getElementById('loading-view');
+            const loadingMessage = document.getElementById('loading-message');
+            const loginView = document.getElementById('login-view');
+            const studentDashboardView = document.getElementById('student-dashboard-view');
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationMessage = document.getElementById('notification-message');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const loginButton = document.getElementById('login-button');
+            const studentLogoutBtn = document.getElementById('student-logout-btn');
+
+            // --- Lógica de Tema e Background ---
+            const themeToggleBtns = [
+                document.getElementById('theme-toggle-login'),
+                document.getElementById('theme-toggle-student')
+            ];
+            const themeToggleDarkIcons = [
+                document.getElementById('theme-toggle-dark-icon-login'),
+                document.getElementById('theme-toggle-dark-icon-student')
+            ];
+            const themeToggleLightIcons = [
+                document.getElementById('theme-toggle-light-icon-login'),
+                document.getElementById('theme-toggle-light-icon-student')
+            ];
+            const backgroundContainer = document.getElementById('background-container');
+            const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+            const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+            const themeColorMeta = document.getElementById('theme-color-meta');
+
+            function updateThemeVisuals(isDark) {
+                themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
+                themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
+                if(backgroundContainer) {
+                    backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+                }
+            }
+            
+            function updateThemeColorMeta(isDark) {
+                if (themeColorMeta) {
+                    themeColorMeta.content = isDark ? '#121212' : '#1a73e8';
+                }
+            }
+
+            function setTheme(isDark) {
+                 if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+                updateThemeVisuals(isDark);
+                updateThemeColorMeta(isDark);
+            }
+            
+            updateThemeVisuals(document.documentElement.classList.contains('dark'));
+            updateThemeColorMeta(document.documentElement.classList.contains('dark'));
+            
+            themeToggleBtns.forEach(btn => {
+                if(btn) {
+                    btn.addEventListener('click', () => {
+                        setTheme(!document.documentElement.classList.contains('dark'));
+                    });
+                }
+            });
+
+            // --- Funções de data ---
+            function getTodayDDMM() {
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                return `${day}/${month}`;
+            }
+
+            // --- Funções de UI ---
+            function showView(viewId) {
+                [loadingView, loginView, studentDashboardView].forEach(v => v.style.display = 'none');
+                const viewToShow = document.getElementById(viewId);
+                if (viewToShow) {
+                    viewToShow.style.display = 'flex';
+                }
+            }
+            
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notificationModal.style.display = 'flex';
+            }
+            document.getElementById('notification-ok-btn').addEventListener('click', () => {
+                notificationModal.style.display = 'none';
+            });
+
+            // --- Funções de Autenticação e Dados ---
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                loginError.textContent = '';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Entrando...';
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    loginError.textContent = 'Usuário ou senha inválidos.';
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Entrar';
+                }
+            });
+
+            async function handleLogout() {
+                if(studentProfileUnsubscribe) {
+                    studentProfileUnsubscribe(); 
+                    studentProfileUnsubscribe = null;
+                }
+                await signOut(auth);
+            }
+
+            studentLogoutBtn.addEventListener('click', handleLogout);
+
+            async function getUserProfile(userId) {
+                const userDocRef = doc(db, 'users', userId);
+                const userDocSnap = await getDoc(userDocRef);
+                return userDocSnap.exists() ? {id: userDocSnap.id, ...userDocSnap.data()} : null;
+            }
+
+            function listenToStudentProfile(userId) {
+                const studentDocRef = doc(db, 'users', userId);
+                studentProfileUnsubscribe = onSnapshot(studentDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const profile = { id: docSnap.id, ...docSnap.data() };
+                        renderStudentDashboard(profile);
+                    }
+                });
+            }
+
+            async function renderStudentDashboard(profile) {
+                const studentNameEl = document.getElementById('student-name');
+                const studentRightColumn = document.getElementById('student-right-column');
+                const todayStr = getTodayDDMM();
+                const isMyBirthday = profile.aniversario === todayStr;
+
+                const existingBdayWidget = document.getElementById('student-birthday-widget');
+                if (existingBdayWidget) existingBdayWidget.remove();
+
+                if (isMyBirthday) {
+                    studentNameEl.innerHTML = `Parabéns ${profile.name.split(' ')[0]}, Feliz Aniversário!! 🎂🥳`;
+                } else {
+                    studentNameEl.textContent = `Bem-vindo(a), ${profile.name || 'Aluno'}!`;
+                    
+                    const birthdayStudents = allStudentsCache.filter(s => s.aniversario === todayStr && s.id !== profile.id);
+                    if (birthdayStudents.length > 0) {
+                        const widgetDiv = document.createElement('div');
+                        widgetDiv.id = 'student-birthday-widget';
+                        widgetDiv.className = 'bg-white dark:bg-dark-card p-6 rounded-2xl shadow-md';
+                        
+                        let listItems = '';
+                        birthdayStudents.forEach(student => {
+                            const photoSrc = student.photoURL || `https://placehold.co/40x40/E2E8F0/8D6E63?text=${student.name ? student.name.charAt(0).toUpperCase() : '?'}`;
+                            listItems += `
+                                <li class="flex items-center gap-3 p-2 bg-amarelo-sol/20 rounded-lg">
+                                    <img src="${photoSrc}" class="w-10 h-10 rounded-full object-cover ring-2 ring-amarelo-sol">
+                                    <div>
+                                        <p class="font-semibold text-marrom-terra dark:text-dark-text">${student.name}</p>
+                                        <p class="text-xs text-marrom-terra/70 dark:text-dark-text-secondary">${student.turma}º Ano</p>
+                                    </div>
+                                </li>
+                            `;
+                        });
+
+                        widgetDiv.innerHTML = `<h3 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-4">Aniversariantes do Dia 🎂</h3><ul class="space-y-3">${listItems}</ul>`;
+                        studentRightColumn.appendChild(widgetDiv);
+                    }
+                }
+                
+                document.getElementById('student-photo').src = profile.photoURL || `https://placehold.co/100x100/E2E8F0/8D6E63?text=${profile.name ? profile.name.charAt(0).toUpperCase() : 'A'}`;
+
+                const xpLevels = [0, 200, 500, 1000, 2000];
+                const levelNames = ['Iniciante', 'Aprendiz', 'Jardineiro', 'Matemático', 'Mestre'];
+                let currentLevel = 0;
+                for(let i = xpLevels.length - 1; i >= 0; i--) {
+                    if((profile.xp || 0) >= xpLevels[i]) {
+                        currentLevel = i;
+                        break;
+                    }
+                }
+                const xpForNextLevel = xpLevels[currentLevel + 1] || profile.xp;
+                const xpInCurrentLevel = (profile.xp || 0) - xpLevels[currentLevel];
+                const xpNeededForLevel = xpForNextLevel - xpLevels[currentLevel];
+                const progressPercentage = xpNeededForLevel > 0 ? (xpInCurrentLevel / xpNeededForLevel) * 100 : 100;
+
+                document.getElementById('student-level').textContent = `Nível ${currentLevel + 1} - ${levelNames[currentLevel]}`;
+                document.getElementById('xp-progress-text').textContent = `${profile.xp || 0} / ${xpForNextLevel} XP`;
+                document.getElementById('xp-progress-bar').style.width = `${progressPercentage}%`;
+
+                const announcementsList = document.getElementById('announcements-list');
+                const activitiesList = document.getElementById('activities-list');
+                const xpHistoryList = document.getElementById('xp-history-list');
+                const studentMedalsList = document.getElementById('student-medals-list');
+                
+                const announcementsQuery = query(collection(db, 'announcements'), where('targetStudents', 'array-contains-any', ['todos', profile.id]));
+                const announcementsSnapshot = await getDocs(announcementsQuery);
+                const announcements = announcementsSnapshot.docs.map(doc => doc.data());
+                announcements.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
+                announcementsList.innerHTML = '';
+                if(announcements.length === 0) {
+                    announcementsList.innerHTML = '<li class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aviso no momento.</li>';
+                } else {
+                    announcements.forEach(announcement => {
+                        const li = document.createElement('li');
+                        li.className = 'p-3 bg-verde-campo/10 dark:bg-verde-campo/20 rounded-lg';
+                        li.innerHTML = `<p class="font-bold text-marrom-terra dark:text-dark-text">${announcement.title}</p><p class="text-sm text-marrom-terra/90 dark:text-dark-text-secondary mt-1">${announcement.message}</p><p class="text-xs text-marrom-terra/50 dark:text-dark-text-secondary/50 mt-2 text-right">${announcement.createdAt.toDate().toLocaleDateString('pt-BR')}</p>`;
+                        announcementsList.appendChild(li);
+                    });
+                }
+
+                const activitiesQuery = query(collection(db, 'activities'), where('assignedTo', 'array-contains', profile.id));
+                const activitiesSnapshot = await getDocs(activitiesQuery);
+                const activities = activitiesSnapshot.docs
+                    .map(doc => doc.data())
+                    .filter(activity => !(activity.completedBy && activity.completedBy.includes(profile.id)));
+                
+                activities.sort((a, b) => a.dueDate.toDate() - b.dueDate.toDate());
+                activitiesList.innerHTML = '';
+                if (activities.length === 0) {
+                    activitiesList.innerHTML = '<li class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhuma atividade pendente.</li>';
+                } else {
+                    activities.forEach(activity => {
+                        const li = document.createElement('li');
+                        li.className = 'p-3 bg-amarelo-sol/20 rounded-lg';
+                        li.innerHTML = `<div class="flex justify-between items-start"><p class="font-bold text-marrom-terra dark:text-dark-text">${activity.title}</p><p class="font-bold text-marrom-terra dark:text-amarelo-sol">+${activity.xp} XP</p></div><p class="text-sm text-marrom-terra/90 dark:text-dark-text-secondary mt-1">${activity.description}</p><p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary/80 mt-2">Prazo: ${activity.dueDate.toDate().toLocaleDateString('pt-BR')}</p>`;
+                        activitiesList.appendChild(li);
+                    });
+                }
+
+                const xpHistoryQuery = query(collection(db, 'users', profile.id, 'xp_history'), orderBy('date', 'desc'), limit(5));
+                const xpSnapshot = await getDocs(xpHistoryQuery);
+                xpHistoryList.innerHTML = '';
+                if (xpSnapshot.empty) {
+                    xpHistoryList.innerHTML = '<li class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhuma atividade registrada ainda.</li>';
+                } else {
+                    xpSnapshot.forEach((doc) => {
+                        const item = doc.data();
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center border-b border-gray-100 dark:border-dark-border pb-3';
+                        const pointsClass = item.points > 0 ? 'xp-gain' : 'xp-loss';
+                        const pointsSign = item.points > 0 ? '+' : '';
+                        li.innerHTML = `<div class="flex-grow"><p class="font-medium text-marrom-terra dark:text-dark-text">${item.reason}</p><p class="text-xs text-marrom-terra/70 dark:text-dark-text-secondary">${item.date.toDate().toLocaleDateString('pt-BR')}</p></div><p class="font-bold text-lg ${pointsClass}">${pointsSign}${item.points} XP</p>`;
+                        xpHistoryList.appendChild(li);
+                    });
+                }
+                
+                studentMedalsList.innerHTML = '';
+                const awardedMedals = profile.medals || {};
+                const awardedMedalKeys = Object.keys(awardedMedals);
+
+                if (awardedMedalKeys.length === 0) {
+                    studentMedalsList.innerHTML = '<p class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary col-span-3">Nenhuma conquista desbloqueada ainda.</p>';
+                } else {
+                    awardedMedalKeys.forEach(medalId => {
+                        if (awardedMedals[medalId] === true) {
+                            const medalInfo = MEDALS_CATALOG[medalId];
+                            if (medalInfo) {
+                                const div = document.createElement('div');
+                                div.className = 'flex flex-col items-center text-center';
+                                div.innerHTML = `
+                                    <img src="${medalInfo.img}" alt="${medalInfo.name}" class="w-16 h-16 rounded-full object-cover">
+                                    <p class="text-xs font-semibold text-marrom-terra dark:text-dark-text-secondary mt-1">${medalInfo.name}</p>
+                                `;
+                                studentMedalsList.appendChild(div);
+                            }
+                        }
+                    });
+                }
+
+                renderRankings(profile);
+            }
+
+            function renderRankingList(listElement, students, currentUserProfile, ringColorClass) {
+                listElement.innerHTML = '';
+                 if (students.length === 0) {
+                    listElement.innerHTML = '<li class="text-sm text-marrom-terra/70 dark:text-dark-text-secondary">Nenhum aluno para exibir.</li>';
+                    return;
+                }
+                students.forEach((student, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center text-sm';
+                    const isCurrentUser = currentUserProfile && student.id === currentUserProfile.id;
+                    const highlightClass = isCurrentUser ? 'bg-verde-campo/10 dark:bg-verde-campo/20 rounded-lg' : '';
+                    const photoSrc = student.photoURL || `https://placehold.co/40x40/E2E8F0/8D6E63?text=${student.name ? student.name.charAt(0).toUpperCase() : '?'}`;
+                    
+                    li.innerHTML = `
+                        <div class="flex items-center w-full p-2 ${highlightClass}">
+                            <span class="font-semibold w-6 text-marrom-terra dark:text-dark-text-secondary">${index + 1}.</span>
+                            <img src="${photoSrc}" alt="Foto de ${student.name}" class="w-8 h-8 rounded-full mx-2 object-cover ring-2 ${ringColorClass}">
+                            <span class="flex-grow text-marrom-terra dark:text-dark-text ${isCurrentUser ? 'font-bold text-verde-campo' : ''}">${student.name}</span>
+                            <span class="font-bold text-amarelo-sol">${student.xp || 0} XP</span>
+                        </div>
+                    `;
+                    listElement.appendChild(li);
+                });
+            }
+
+            function renderRankings(profile) {
+                const classRankingList = document.getElementById('class-ranking-list');
+                const generalRankingList = document.getElementById('general-ranking-list');
+                
+                const studentsInClass = allStudentsCache
+                    .filter(s => s.turma === profile.turma)
+                    .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+                    .slice(0, 5);
+                renderRankingList(classRankingList, studentsInClass, profile, 'ring-verde-campo/50');
+                
+                const topGeneralStudents = [...allStudentsCache]
+                    .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+                    .slice(0, 5);
+                renderRankingList(generalRankingList, topGeneralStudents, profile, 'ring-amarelo-sol/50');
+            }
+
+            function main() {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    storage = getStorage(app);
+
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            loadingMessage.textContent = 'Verificando seu perfil...';
+                            const profile = await getUserProfile(user.uid);
+
+                            // REMOVIDO: Lógica para o professor.
+                            // Este app é apenas para alunos.
+                            if (profile && profile.role === 'aluno') {
+                                loadingMessage.textContent = 'Carregando dados da turma...';
+                                // Carrega todos os alunos para os rankings e aniversários
+                                const studentsQuery = query(collection(db, "users"), where("role", "==", "aluno"));
+                                const querySnapshot = await getDocs(studentsQuery);
+                                allStudentsCache = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                                // Inicia o listener para o perfil do aluno logado
+                                listenToStudentProfile(user.uid);
+                                showView('student-dashboard-view');
+                                
+                                // Lógica para upload de foto
+                                const photoUploadInput = document.getElementById('photo-upload-input');
+                                const photoUploadStatus = document.getElementById('photo-upload-status');
+                                // Recria o event listener para evitar duplicação em re-autenticações
+                                const newPhotoUploadInput = photoUploadInput.cloneNode(true);
+                                photoUploadInput.parentNode.replaceChild(newPhotoUploadInput, photoUploadInput);
+
+                                newPhotoUploadInput.addEventListener('change', async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+
+                                    if (!file.type.startsWith('image/')) {
+                                        photoUploadStatus.textContent = 'Por favor, selecione um arquivo de imagem.';
+                                        photoUploadStatus.className = 'text-sm mt-4 text-center text-red-600';
+                                        return;
+                                    }
+                                    if (file.size > 5 * 1024 * 1024) { // Limite de 5MB
+                                        photoUploadStatus.textContent = 'A imagem é muito grande (máx 5MB).';
+                                        photoUploadStatus.className = 'text-sm mt-4 text-center text-red-600';
+                                        return;
+                                    }
+
+                                    photoUploadStatus.textContent = 'Enviando foto...';
+                                    photoUploadStatus.className = 'text-sm mt-4 text-center text-marrom-terra dark:text-dark-text-secondary';
+
+                                    try {
+                                        const storageRef = ref(storage, `profile_pictures/${user.uid}/${file.name}`);
+                                        const snapshot = await uploadBytes(storageRef, file);
+                                        const downloadURL = await getDownloadURL(snapshot.ref);
+                                        const userDocRef = doc(db, 'users', user.uid);
+                                        await updateDoc(userDocRef, { photoURL: downloadURL });
+
+                                        photoUploadStatus.textContent = 'Foto atualizada com sucesso!';
+                                        photoUploadStatus.className = 'text-sm mt-4 text-center text-verde-campo';
+                                        
+                                        setTimeout(() => { photoUploadStatus.textContent = ''; }, 5000);
+
+                                    } catch (error) {
+                                        console.error("Erro ao enviar a foto:", error);
+                                        photoUploadStatus.textContent = 'Ocorreu um erro ao enviar a foto.';
+                                        photoUploadStatus.className = 'text-sm mt-4 text-center text-red-600';
+                                    } finally {
+                                        newPhotoUploadInput.value = '';
+                                    }
+                                });
+
+                            } else {
+                                // Se não for aluno (ou não tiver perfil), desloga e mostra erro.
+                                await signOut(auth);
+                                showView('login-view');
+                                document.getElementById('login-error').textContent = "Acesso permitido apenas para alunos.";
+                            }
+                        } else {
+                            // Se não houver usuário logado, mostra a tela de login.
+                            allStudentsCache = [];
+                            showView('login-view');
+                        }
+                    });
+                } catch(error) {
+                    console.error("Erro na Inicialização:", error);
+                    document.body.innerHTML = 'Erro grave ao iniciar a plataforma. Contate o suporte.';
+                }
+            }
+
+            main();
+        });
+    </script>
+</body>
+</html>
