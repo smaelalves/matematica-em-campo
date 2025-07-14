@@ -96,22 +96,36 @@
             max-height: 200px;
             object-fit: contain;
         }
-        /* Garante que o card tenha uma proporção quadrada e seja responsivo */
-        .quiz-card {
-            aspect-ratio: 1 / 1.1;
+        /* [NOVO] Estilo para o container do background */
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
         }
     </style>
 </head>
-<body class="bg-sky-50 dark:bg-dark-bg font-sans transition-colors duration-300">
+<body class="font-sans transition-colors duration-300">
+
+    <!-- [NOVO] Container para o background dinâmico -->
+    <div id="background-container"></div>
 
     <!-- VISÃO 0: CARREGAMENTO INICIAL -->
-    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
-        <div class="loader"></div>
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando quizzes...</p>
+        </div>
     </div>
 
     <!-- VISÃO 1: LOGIN -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center transition-all duration-500">
-        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
                 <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
                 <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Teste seus conhecimentos!</p>
@@ -121,11 +135,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
-                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
-                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-card dark:border-dark-border dark:text-dark-text" required>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
                     </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
@@ -143,8 +157,8 @@
     </div>
 
     <!-- VISÃO 2: PAINEL DO PROFESSOR (LISTA DE QUIZZES) -->
-    <div id="teacher-dashboard-view" class="view">
-        <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="teacher-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Painel de Quizzes</h1>
                 <div class="flex items-center gap-4">
@@ -157,7 +171,7 @@
                 </div>
             </div>
         </header>
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <main class="flex-grow max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 w-full">
             
             <div class="bg-white dark:bg-dark-card p-4 rounded-xl shadow-md mb-6">
                 <div class="flex justify-between items-center mb-4">
@@ -204,9 +218,9 @@
     </div>
 
     <!-- VISÃO 3: PROFESSOR CRIANDO/EDITANDO QUIZ -->
-    <div id="quiz-creator-view" class="view">
-        <main class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
+    <div id="quiz-creator-view" class="view min-h-screen flex items-center justify-center p-4">
+        <main class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 w-full">
+            <div class="bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
                 <form id="create-quiz-form" class="space-y-6">
                     <input type="hidden" id="quiz-id">
                     <input type="hidden" id="quiz-icon-url-hidden">
@@ -276,8 +290,8 @@
     </div>
 
     <!-- VISÃO 4: PAINEL DO ALUNO (LISTA DE QUIZZES) -->
-    <div id="student-dashboard-view" class="view">
-         <header class="bg-white dark:bg-dark-card shadow-md">
+    <div id="student-dashboard-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+         <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Meus Quizzes</h1>
@@ -293,7 +307,7 @@
                 </div>
             </div>
         </header>
-        <main class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <main class="flex-grow max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 w-full">
             <div id="quizzes-list-student" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <!-- Cards dos quizzes para o aluno serão preenchidos aqui -->
             </div>
@@ -301,8 +315,8 @@
     </div>
 
     <!-- VISÃO 5: ALUNO RESPONDENDO O QUIZ -->
-    <div id="quiz-taking-view" class="view min-h-screen bg-azul-ceu/20 dark:bg-dark-bg/50 flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-2xl bg-white dark:bg-dark-card p-8 rounded-2xl shadow-2xl">
+    <div id="quiz-taking-view" class="view min-h-screen flex flex-col items-center justify-center p-4 bg-black/10 backdrop-blur-sm">
+        <div class="w-full max-w-2xl bg-white dark:bg-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl">
             <div class="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2.5 mb-4">
               <div id="quiz-progress-bar" class="bg-amarelo-sol h-2.5 rounded-full progress-bar-quiz" style="width: 0%"></div>
             </div>
@@ -325,8 +339,8 @@
     </div>
 
     <!-- VISÃO 6: RESULTADO DO QUIZ -->
-    <div id="quiz-results-view" class="view min-h-screen flex items-center justify-center p-4 bg-cover bg-center">
-        <div class="w-full max-w-md bg-white/90 dark:bg-black/70 backdrop-blur-sm p-8 rounded-2xl shadow-xl text-center">
+    <div id="quiz-results-view" class="view min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl text-center">
             <h1 class="text-3xl font-bold text-marrom-terra dark:text-dark-text">Quiz Finalizado!</h1>
             <img id="quiz-result-image" src="" class="w-32 h-32 mx-auto my-4"/>
             <p id="score-text" class="text-2xl font-semibold text-marrom-terra dark:text-dark-text">Você acertou 8 de 10!</p>
@@ -337,14 +351,14 @@
     </div>
 
     <!-- MODAIS -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
         </div>
     </div>
     
-    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+    <div id="teacher-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="teacher-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -355,7 +369,7 @@
         </div>
     </div>
     
-    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+    <div id="student-quiz-details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                 <div id="student-quiz-modal-header" class="flex items-center gap-4"></div>
@@ -366,7 +380,7 @@
         </div>
     </div>
     
-    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 items-center justify-center p-4 z-50">
+    <div id="quiz-responses-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="quiz-responses-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Respostas do Quiz</h2>
@@ -448,8 +462,7 @@
             document.getElementById('theme-toggle-light-icon-student'),
             document.getElementById('theme-toggle-light-icon-teacher')
         ];
-        const loginViewEl = document.getElementById('login-view');
-        const resultsViewEl = document.getElementById('quiz-results-view');
+        const backgroundContainer = document.getElementById('background-container');
         const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
         const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
         const themeColorMeta = document.getElementById('theme-color-meta');
@@ -457,9 +470,9 @@
         function updateThemeVisuals(isDark) {
             themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
             themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
-            const bgUrl = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
-            if(loginViewEl) loginViewEl.style.backgroundImage = bgUrl;
-            if(resultsViewEl) resultsViewEl.style.backgroundImage = bgUrl;
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            }
         }
 
         function updateThemeColorMeta(isDark) {
@@ -495,7 +508,11 @@
             document.querySelectorAll('.view, .modal').forEach(v => v.style.display = 'none');
             const viewToShow = document.getElementById(viewId);
             if (viewToShow) {
-                viewToShow.style.display = (viewId.includes('login') || viewId.includes('results') || viewId.includes('taking') || viewId.includes('loading')) ? 'flex' : 'block';
+                const flexViews = ['login-view', 'results-view', 'taking-view', 'loading-view', 'quiz-creator-view', 'student-dashboard-view', 'teacher-dashboard-view'];
+                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+                 if (viewId === 'teacher-dashboard-view' || viewId === 'student-dashboard-view') {
+                    viewToShow.style.display = 'flex';
+                }
             }
         }
 
@@ -836,7 +853,7 @@
                     dateText = `Fechou em: ${untilDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`;
                 }
                 
-                card.className = 'quiz-card relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1 cursor-pointer';
+                card.className = 'relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1 cursor-pointer';
 
                 card.innerHTML = `
                     <div class="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold text-white ${statusColor} rounded-full shadow-md">
@@ -844,9 +861,9 @@
                     </div>
                     
                     <div class="flex flex-col h-full items-center justify-center pt-4">
-                        <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
+                        <img src="${quiz.iconUrl}" class="w-20 h-20 sm:w-24 sm:h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
-                        <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
+                        <h3 class="font-extrabold text-base sm:text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
                         
                         <p class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary mt-1">${targetText}</p>
                         
@@ -863,7 +880,7 @@
             });
 
             list.addEventListener('click', (e) => {
-                const card = e.target.closest('.quiz-card');
+                const card = e.target.closest('.relative.bg-white'); // Simplified selector
                 if (card) {
                     showTeacherQuizDetailsModal(card.dataset.id);
                 }
@@ -1168,7 +1185,7 @@
                 const until = quiz.availableUntil.toDate();
                 const status = getQuizStatus({ availableFrom: quiz.availableFrom, availableUntil: quiz.availableUntil });
 
-                let cardClasses = 'quiz-card relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 ';
+                let cardClasses = 'relative bg-white dark:bg-dark-card p-4 rounded-2xl shadow-lg flex flex-col text-center transition-all duration-300 ';
                 
                 if (status === 'Ativo') {
                     cardClasses += 'hover:shadow-xl hover:transform hover:-translate-y-1 cursor-pointer is-available';
@@ -1205,9 +1222,9 @@
                     </div>
                     
                     <div class="flex flex-col h-full items-center justify-center pt-4">
-                        <img src="${quiz.iconUrl}" class="w-24 h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
+                        <img src="${quiz.iconUrl}" class="w-20 h-20 sm:w-24 sm:h-24 mb-3 rounded-full object-cover shadow-md border-4 border-white dark:border-dark-card" onerror="this.src='https://placehold.co/96x96/E2E8F0/4A5568?text=Icone'"/>
                         
-                        <h3 class="font-extrabold text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
+                        <h3 class="font-extrabold text-base sm:text-lg text-marrom-terra dark:text-dark-text leading-tight">${quiz.title}</h3>
                         
                         <span class="mt-2 text-sm font-bold text-amarelo-sol bg-marrom-terra/10 dark:bg-amarelo-sol/20 px-3 py-1 rounded-full">+${quiz.xp} XP</span>
                         
@@ -1222,7 +1239,7 @@
             });
 
             list.addEventListener('click', (e) => {
-                const card = e.target.closest('.quiz-card.is-available');
+                const card = e.target.closest('.is-available');
                 if(card) {
                     showStudentQuizDetailsModal(card.dataset.id);
                 }
