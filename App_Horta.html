@@ -386,7 +386,7 @@
     </div>
 
     <!-- MODAL DE COLETAS DO ALUNO -->
-    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="student-collections-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b dark:border-dark-border pb-3 mb-4">
                 <h2 id="student-collections-modal-title" class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Coletas do Aluno</h2>
@@ -411,7 +411,7 @@
     </div>
 
     <!-- MODAL DE DETALHES DA COLETA -->
-    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             <div id="details-modal-header" class="flex justify-between items-start border-b dark:border-dark-border pb-3 mb-4">
                  <!-- Header do modal será injetado aqui -->
@@ -424,7 +424,7 @@
 
 
     <!-- MODAL DE NOTIFICAÇÃO -->
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
@@ -894,7 +894,6 @@
 
         // --- MODAIS ---
         function showNotification(message) {
-            document.getElementById('notification-message').style.display = 'flex';
             document.getElementById('notification-message').textContent = message;
             document.getElementById('notification-modal').style.display = 'flex';
         }
