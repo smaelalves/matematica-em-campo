@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>App Chat - Matemática em Campo</title>
+    <!-- Fontes e Estilos Visuais -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS com a paleta de cores do projeto e modo escuro
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        // Cores para o tema escuro
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .view { display: none; }
+        .loader {
+            border: 4px solid #424242;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1.5s linear infinite;
+        }
+        .dark .loader {
+             border: 4px solid #4a5568;
+             border-top: 4px solid #4CAF50;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+        /* Scrollbar customizada */
+        #messages-container::-webkit-scrollbar, #online-users-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        #messages-container::-webkit-scrollbar-track, #online-users-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #messages-container::-webkit-scrollbar-thumb, #online-users-list::-webkit-scrollbar-thumb {
+            background-color: #4CAF50;
+            border-radius: 20px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+        .dark #messages-container::-webkit-scrollbar-thumb, .dark #online-users-list::-webkit-scrollbar-thumb {
+            background-color: #FDD835;
+        }
+    </style>
+</head>
+<body class="font-sans transition-colors duration-300 antialiased">
+
+    <div id="background-container"></div>
+
+    <!-- VISÃO 0: CARREGAMENTO INICIAL -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Conectando ao chat...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">App Chat</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Conecte-se com sua turma!</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90">Entrar</button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button type="button" id="theme-toggle-login" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- [MODIFICADO] VISÃO 2: CONTAINER PRINCIPAL DO APP -->
+    <div id="app-container" class="view h-screen w-screen flex flex-col lg:flex-row bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md overflow-hidden">
+        
+        <!-- [MODIFICADO] TELA 1: LISTA DE SALAS (Principal no mobile) -->
+        <aside id="rooms-list-view" class="w-full lg:w-80 bg-azul-ceu/30 dark:bg-dark-card/50 flex flex-col transition-all duration-300">
+            <div class="p-4 border-b border-marrom-terra/20 dark:border-dark-border flex items-center justify-between">
+                <div class="flex items-center">
+                    <img id="user-avatar-rooms" src="https://placehold.co/40x40/E2E8F0/4A5568?text=..." class="w-10 h-10 rounded-full object-cover">
+                    <div class="ml-3">
+                        <p id="user-name-rooms" class="font-bold text-sm text-marrom-terra dark:text-dark-text">Carregando...</p>
+                        <p id="user-turma-rooms" class="text-xs text-marrom-terra/80 dark:text-dark-text-secondary">Sua turma</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                     <a href="App_Painel.html" class="p-2 rounded-full text-verde-campo hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                     </a>
+                     <button id="theme-toggle-chat" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                        <svg id="theme-toggle-dark-icon-chat" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-chat" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <button id="logout-btn" class="p-2 rounded-full text-red-600 hover:bg-red-500/10 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    </button>
+                </div>
+            </div>
+            <nav id="chat-rooms-list" class="flex-grow p-2 sm:p-4 space-y-2 overflow-y-auto">
+                <!-- As salas de chat serão inseridas aqui -->
+            </nav>
+        </aside>
+
+        <!-- [MODIFICADO] TELA 2: TELA DE CHAT (Oculta no mobile inicialmente) -->
+        <div id="chat-screen-view" class="w-full h-full flex-1 flex-col absolute inset-0 lg:static lg:flex hidden">
+             <!-- Cabeçalho do Chat -->
+            <header class="p-3 border-b border-marrom-terra/20 dark:border-dark-border flex items-center justify-between bg-white/50 dark:bg-dark-card/50 backdrop-blur-sm">
+                <div class="flex items-center">
+                    <button id="back-to-rooms-btn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 lg:hidden">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-marrom-terra dark:text-dark-text" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </button>
+                    <div id="current-room-icon" class="text-2xl mx-2"></div>
+                    <h2 id="current-room-name" class="text-lg font-bold text-marrom-terra dark:text-dark-text">Selecione uma sala</h2>
+                </div>
+                <button id="toggle-online-users-btn" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a3.002 3.002 0 013.39-2.142 3.002 3.002 0 013.39 2.142m0 0A3 3 0 0112 18v-2m0 0c1.657 0 3-1.343 3-3V6a3 3 0 00-3-3S9 3 9 6v7c0 1.657 1.343 3 3 3z" /></svg>
+                </button>
+            </header>
+            <div class="flex flex-1 overflow-hidden">
+                <main class="flex-1 flex flex-col">
+                    <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-4"></div>
+                    <div id="message-form-container" class="p-4 border-t border-marrom-terra/20 dark:border-dark-border">
+                        <form id="message-form" class="flex items-center gap-4">
+                            <input id="message-input" type="text" placeholder="Digite sua mensagem..." autocomplete="off" class="w-full p-3 border rounded-full focus:ring-verde-campo focus:border-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                            <button type="submit" class="bg-verde-campo text-white p-3 rounded-full hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                            </button>
+                        </form>
+                    </div>
+                </main>
+                <aside id="online-users-sidebar" class="w-64 bg-azul-ceu/20 dark:bg-dark-card/40 flex-col border-l border-marrom-terra/20 dark:border-dark-border hidden lg:flex">
+                    <div class="p-4 border-b border-marrom-terra/20 dark:border-dark-border">
+                        <h3 class="font-bold text-marrom-terra dark:text-dark-text">Online na Sala (<span id="online-count">0</span>)</h3>
+                    </div>
+                    <div id="online-users-list" class="flex-1 p-2 overflow-y-auto space-y-2"></div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAIS -->
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-marrom-terra dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-verde-campo text-white py-2 rounded-lg hover:bg-verde-campo/90 font-bold">OK</button>
+        </div>
+    </div>
+    
+    <div id="confirmation-modal" class="modal fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style="display: none;">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="confirmation-message" class="text-lg text-marrom-terra dark:text-dark-text mb-6"></p>
+            <div class="flex gap-4">
+                <button id="cancel-btn" class="w-full bg-gray-300 dark:bg-dark-border text-marrom-terra dark:text-dark-text font-bold py-2 rounded-lg hover:bg-gray-400">Cancelar</button>
+                <button id="confirm-btn" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, addDoc, serverTimestamp, orderBy, onSnapshot, where, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+  		    apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+  		    authDomain: "app-matematica-em-campo.firebaseapp.com",
+ 		    projectId: "app-matematica-em-campo",
+  		    storageBucket: "app-matematica-em-campo.firebasestorage.app",
+  		    messagingSenderId: "177907988624",
+  		    appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserProfile = null;
+        let allUsersCache = []; 
+        let currentRoomId = null;
+        let unsubscribeFromMessages = null;
+        let unsubscribeFromPresence = null;
+        let unsubscribeFromUserProfile = null;
+
+        // --- LÓGICA DE TEMA ---
+        const themeToggleBtns = [
+            document.getElementById('theme-toggle-login'),
+            document.getElementById('theme-toggle-chat')
+        ];
+        const themeToggleDarkIcons = [
+            document.getElementById('theme-toggle-dark-icon-login'),
+            document.getElementById('theme-toggle-dark-icon-chat')
+        ];
+        const themeToggleLightIcons = [
+            document.getElementById('theme-toggle-light-icon-login'),
+            document.getElementById('theme-toggle-light-icon-chat')
+        ];
+        const backgroundContainer = document.getElementById('background-container');
+        const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+        const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+        
+        function updateThemeVisuals(isDark) {
+            themeToggleDarkIcons.forEach(icon => { if(icon) isDark ? icon.classList.add('hidden') : icon.classList.remove('hidden') });
+            themeToggleLightIcons.forEach(icon => { if(icon) isDark ? icon.classList.remove('hidden') : icon.classList.add('hidden') });
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            }
+        }
+
+        function setTheme(isDark) {
+             if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+            updateThemeVisuals(isDark);
+        }
+        
+        updateThemeVisuals(document.documentElement.classList.contains('dark'));
+        
+        themeToggleBtns.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    setTheme(!document.documentElement.classList.contains('dark'));
+                });
+            }
+        });
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const viewToShow = document.getElementById(viewId);
+            if (viewToShow) {
+                const flexViews = ['login-view', 'loading-view', 'app-container'];
+                viewToShow.style.display = flexViews.includes(viewId) ? 'flex' : 'block';
+            }
+        }
+
+        async function updateUserPresence(roomId, isOnline) {
+            if (!currentUserProfile) return;
+            const presenceRef = doc(db, 'chat_rooms', roomId, 'present_users', currentUserProfile.id);
+            if (isOnline) {
+                await setDoc(presenceRef, {
+                    name: currentUserProfile.name || "Usuário Anônimo",
+                    photoURL: currentUserProfile.photoURL || null,
+                    userId: currentUserProfile.id,
+                    last_seen: serverTimestamp()
+                });
+            } else {
+                await deleteDoc(presenceRef);
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (unsubscribeFromUserProfile) unsubscribeFromUserProfile();
+            if (user) {
+                showView('loading-view');
+                const userDocRef = doc(db, 'users', user.uid);
+
+                unsubscribeFromUserProfile = onSnapshot(userDocRef, async (userDocSnap) => {
+                    if (userDocSnap.exists()) {
+                        currentUserProfile = { id: user.uid, ...userDocSnap.data() };
+                        
+                        if (allUsersCache.length === 0) {
+                            const usersQuery = query(collection(db, "users"));
+                            const usersSnapshot = await getDocs(usersQuery);
+                            allUsersCache = usersSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        } else {
+                            const index = allUsersCache.findIndex(u => u.id === currentUserProfile.id);
+                            if (index !== -1) {
+                                allUsersCache[index] = currentUserProfile;
+                            } else {
+                                allUsersCache.push(currentUserProfile);
+                            }
+                        }
+
+                        setupChatUI(currentUserProfile);
+                        showView('app-container');
+                    } else {
+                        if (currentRoomId) await updateUserPresence(currentRoomId, false);
+                        await signOut(auth);
+                    }
+                });
+
+            } else {
+                if (currentRoomId) await updateUserPresence(currentRoomId, false);
+                currentUserProfile = null;
+                if (unsubscribeFromMessages) unsubscribeFromMessages();
+                if (unsubscribeFromPresence) unsubscribeFromPresence();
+                showView('login-view');
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorP = document.getElementById('login-error');
+            const button = document.getElementById('login-button');
+            errorP.textContent = '';
+            button.disabled = true; button.textContent = 'Entrando...';
+            try { await signInWithEmailAndPassword(auth, email, password); } 
+            catch (error) { errorP.textContent = 'Usuário ou senha inválidos.'; } 
+            finally { button.disabled = false; button.textContent = 'Entrar'; }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+             if (currentRoomId) await updateUserPresence(currentRoomId, false);
+             await signOut(auth);
+        });
+
+        function setupChatUI(profile) {
+            document.getElementById('user-name-rooms').textContent = profile.name;
+            document.getElementById('user-turma-rooms').textContent = (profile.role === 'professor') ? 'Moderador' : `${profile.turma}º Ano`;
+            document.getElementById('user-avatar-rooms').src = profile.photoURL || `https://placehold.co/40x40/E2E8F0/4A5568?text=${profile.name ? profile.name.charAt(0).toUpperCase() : 'A'}`;
+            
+            const roomsList = document.getElementById('chat-rooms-list');
+            roomsList.innerHTML = '';
+
+            let availableRooms = [
+                { id: 'geral', name: 'Geral', icon: '🌍' }
+            ];
+
+            if (profile.role === 'professor') {
+                availableRooms.push({ id: 'professores', name: 'Professores', icon: '🎓' });
+                ['6', '7', '8', '9'].forEach(turma => {
+                    availableRooms.push({ id: `turma_${turma}`, name: `${turma}º Ano`, icon: '👥' });
+                });
+            } else {
+                 availableRooms.push({ id: `turma_${profile.turma}`, name: `${profile.turma}º Ano`, icon: '👥' });
+            }
+            
+            availableRooms.forEach(room => {
+                const roomLink = document.createElement('a');
+                roomLink.href = '#';
+                roomLink.dataset.roomId = room.id;
+                roomLink.dataset.roomName = room.name;
+                roomLink.dataset.roomIcon = room.icon;
+                roomLink.className = 'room-link flex items-center p-3 rounded-lg text-marrom-terra dark:text-dark-text-secondary hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 transition-colors duration-200';
+                roomLink.innerHTML = `
+                    <span class="text-2xl">${room.icon}</span>
+                    <span class="ml-4 font-bold">${room.name}</span>
+                `;
+                roomLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectRoom(room.id, room.name, room.icon);
+                });
+                roomsList.appendChild(roomLink);
+            });
+        }
+
+        async function selectRoom(roomId, roomName, roomIcon) {
+            if (currentRoomId) {
+                await updateUserPresence(currentRoomId, false);
+            }
+            if (unsubscribeFromMessages) unsubscribeFromMessages();
+            if (unsubscribeFromPresence) unsubscribeFromPresence();
+
+            currentRoomId = roomId;
+            await updateUserPresence(currentRoomId, true);
+            
+            document.getElementById('rooms-list-view').classList.add('hidden', 'lg:flex');
+            document.getElementById('chat-screen-view').classList.remove('hidden');
+
+            document.getElementById('current-room-name').textContent = roomName;
+            document.getElementById('current-room-icon').textContent = roomIcon;
+            
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = '<div class="loader mx-auto"></div>';
+
+            const messagesQuery = query(collection(db, 'chat_rooms', roomId, 'messages'), orderBy('timestamp', 'asc'));
+            unsubscribeFromMessages = onSnapshot(messagesQuery, (snapshot) => {
+                messagesContainer.innerHTML = '';
+                if(snapshot.empty) {
+                     messagesContainer.innerHTML = '<p class="text-center text-sm text-gray-500 dark:text-dark-text-secondary">Nenhuma mensagem ainda. Seja o primeiro a conversar!</p>';
+                }
+                snapshot.forEach(doc => {
+                    renderMessage(doc.id, doc.data());
+                });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+            
+            const presenceQuery = query(collection(db, 'chat_rooms', roomId, 'present_users'));
+            unsubscribeFromPresence = onSnapshot(presenceQuery, (snapshot) => {
+                renderOnlineUsers(snapshot.docs);
+            });
+        }
+        
+        function renderOnlineUsers(userDocs) {
+            const onlineList = document.getElementById('online-users-list');
+            const onlineCount = document.getElementById('online-count');
+            onlineList.innerHTML = '';
+            onlineCount.textContent = userDocs.length;
+
+            userDocs.forEach(doc => {
+                const user = doc.data();
+                const userProfile = allUsersCache.find(u => u.id === user.userId);
+                const isMuted = userProfile?.muted && userProfile.muted[currentRoomId];
+                const isProfessor = currentUserProfile.role === 'professor';
+                const isSelf = user.userId === currentUserProfile.id;
+
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5 group ${isMuted ? 'opacity-60' : ''}`;
+                
+                let moderationTools = '';
+                if (isProfessor && !isSelf) {
+                    const muteIcon = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clip-rule="evenodd" />
+                          ${isMuted ? '<path fill-rule="evenodd" d="M19.707 4.293a1 1 0 010 1.414l-14 14a1 1 0 01-1.414-1.414l14-14a1 1 0 011.414 0z" clip-rule="evenodd" />' : ''}
+                        </svg>`;
+                    moderationTools = `<button data-sender-id="${user.userId}" class="toggle-mute-btn text-yellow-600 dark:text-amarelo-sol opacity-0 group-hover:opacity-100 transition-opacity" title="${isMuted ? 'Reativar' : 'Silenciar'} aluno">${muteIcon}</button>`;
+                }
+
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <img src="${user.photoURL || `https://placehold.co/32x32/E2E8F0/4A5568?text=${user.name ? user.name.charAt(0).toUpperCase() : '?'}`}" class="w-8 h-8 rounded-full object-cover">
+                        <span class="ml-3 text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary">${user.name}</span>
+                    </div>
+                    <div>${moderationTools}</div>
+                `;
+                onlineList.appendChild(li);
+            });
+        }
+
+        function renderMessage(messageId, data) {
+            const messagesContainer = document.getElementById('messages-container');
+            const messageWrapper = document.createElement('div');
+            const isCurrentUser = data.senderId === currentUserProfile.id;
+            const isProfessor = currentUserProfile.role === 'professor';
+            const isStudentMessage = data.senderId !== currentUserProfile.id;
+
+            messageWrapper.className = `flex items-end gap-2 group ${isCurrentUser ? 'flex-row-reverse' : ''}`;
+            
+            let moderationTools = '';
+            if (isProfessor && isStudentMessage) {
+                moderationTools = `<button data-message-id="${messageId}" class="delete-message-btn text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xl" title="Apagar mensagem">&times;</button>`;
+            }
+
+            const messageContent = `
+                <img src="${data.senderPhotoURL || `https://placehold.co/40x40/E2E8F0/4A5568?text=${data.senderName ? data.senderName.charAt(0).toUpperCase() : '?'}`}" class="w-10 h-10 rounded-full object-cover">
+                <div class="flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}">
+                    <div class="px-4 py-2 rounded-2xl ${isCurrentUser ? 'bg-verde-campo text-white rounded-br-none' : 'bg-gray-200 dark:bg-dark-card text-marrom-terra dark:text-dark-text rounded-bl-none'}">
+                        <p class="text-sm">${data.text}</p>
+                    </div>
+                    <span class="text-xs text-gray-400 dark:text-dark-text-secondary mt-1">${data.senderName} - ${data.timestamp ? data.timestamp.toDate().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : ''}</span>
+                </div>
+                <div class="w-6 flex items-center justify-center">${moderationTools}</div>
+            `;
+            
+            messageWrapper.innerHTML = messageContent;
+            messagesContainer.appendChild(messageWrapper);
+        }
+
+        document.getElementById('messages-container').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-message-btn');
+            if (deleteBtn) {
+                const messageId = deleteBtn.dataset.messageId;
+                showConfirmationModal(
+                    'Tem certeza que deseja apagar esta mensagem? Esta ação não pode ser desfeita.',
+                    () => deleteMessage(currentRoomId, messageId)
+                );
+            }
+        });
+
+        document.getElementById('online-users-list').addEventListener('click', (e) => {
+             const muteBtn = e.target.closest('.toggle-mute-btn');
+            if (muteBtn) {
+                const studentId = muteBtn.dataset.senderId;
+                toggleMuteStatus(studentId, currentRoomId);
+            }
+        });
+
+        async function toggleMuteStatus(studentId, roomId) {
+            const studentRef = doc(db, 'users', studentId);
+            const studentProfile = allUsersCache.find(u => u.id === studentId);
+            if (!studentProfile) return;
+
+            const isMuted = studentProfile.muted && studentProfile.muted[roomId];
+            const updateData = {};
+            updateData[`muted.${roomId}`] = !isMuted;
+
+            try {
+                await updateDoc(studentRef, updateData);
+                studentProfile.muted = studentProfile.muted || {};
+                studentProfile.muted[roomId] = !isMuted;
+                showNotification(`Aluno ${isMuted ? 'reativado' : 'silenciado'} nesta sala.`);
+            } catch (error) {
+                console.error("Erro ao atualizar status de mudo:", error);
+                showNotification("Falha ao atualizar status do aluno.");
+            }
+        }
+
+        async function deleteMessage(roomId, messageId) {
+            try {
+                await deleteDoc(doc(db, 'chat_rooms', roomId, 'messages', messageId));
+            } catch (error) {
+                console.error("Erro ao apagar mensagem:", error);
+                showNotification('Não foi possível apagar a mensagem.');
+            }
+        }
+
+        document.getElementById('message-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+
+            if (currentUserProfile?.muted && currentUserProfile.muted[currentRoomId]) {
+                showNotification("Você foi silenciado nesta sala e não pode enviar mensagens.");
+                return;
+            }
+
+            if (text && currentRoomId && currentUserProfile) {
+                const tempMessage = input.value;
+                input.value = '';
+                input.disabled = true;
+                try {
+                    await addDoc(collection(db, 'chat_rooms', currentRoomId, 'messages'), {
+                        text: text,
+                        senderId: currentUserProfile.id,
+                        senderName: currentUserProfile.name || "Usuário Anônimo",
+                        senderPhotoURL: currentUserProfile.photoURL || null,
+                        timestamp: serverTimestamp()
+                    });
+                     const messagesContainer = document.getElementById('messages-container');
+                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } catch (error) {
+                    console.error("Error sending message: ", error);
+                    showNotification("Erro ao enviar mensagem.");
+                    input.value = tempMessage;
+                } finally {
+                    input.disabled = false;
+                    input.focus();
+                }
+            }
+        });
+        
+        function showNotification(message) {
+            document.getElementById('notification-message').textContent = message;
+            document.getElementById('notification-modal').style.display = 'flex';
+        }
+        document.getElementById('notification-ok-btn').addEventListener('click', () => {
+            document.getElementById('notification-modal').style.display = 'none';
+        });
+
+        function showConfirmationModal(message, onConfirm) {
+            const modal = document.getElementById('confirmation-modal');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            document.getElementById('confirmation-message').textContent = message;
+
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            const closeAndCleanup = () => {
+                modal.style.display = 'none';
+                newConfirmBtn.removeEventListener('click', confirmHandler);
+                cancelBtn.removeEventListener('click', closeAndCleanup);
+            };
+
+            const confirmHandler = () => {
+                onConfirm();
+                closeAndCleanup();
+            };
+
+            newConfirmBtn.addEventListener('click', confirmHandler);
+            cancelBtn.addEventListener('click', closeAndCleanup);
+
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('toggle-online-users-btn').addEventListener('click', () => {
+            document.getElementById('online-users-sidebar').classList.toggle('hidden');
+            document.getElementById('online-users-sidebar').classList.toggle('flex');
+        });
+        
+        document.getElementById('back-to-rooms-btn').addEventListener('click', () => {
+            document.getElementById('chat-screen-view').classList.add('hidden');
+            document.getElementById('rooms-list-view').classList.remove('hidden');
+        });
+
+    </script>
+</body>
+</html>
