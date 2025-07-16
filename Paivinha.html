@@ -1,8 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="">
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
     <title>Tutor IA - Paivinha</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,23 +113,37 @@
         </div>
     </div>
 
-    <!-- [AJUSTE] VISÃO DE LOGIN PADRONIZADA -->
-    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
-        <div class="w-full max-w-md bg-white/90 dark:bg-dark-card/90 p-8 rounded-2xl shadow-xl">
+    <!-- VISÃO 1: LOGIN -->
+    <!-- [MODIFICADO] Removido bg-cover/center e ajustado o card de login -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
             <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Tutor Paivinha</h1>
-                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">O seu assistente de IA para a escola.</p>
-                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Prof.º Ismael Alves</p>
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Acesse seu painel de aprendizado.</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
             </div>
             <form id="login-form">
                 <div class="space-y-4">
-                    <input type="email" id="email" placeholder="E-mail" class="w-full px-4 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
-                    <input type="password" id="password" placeholder="Senha" class="w-full px-4 py-2 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text" required>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
                 </div>
                 <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
-                <button type="submit" id="login-button" class="mt-6 w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90">Entrar</button>
-                <div class="mt-6 text-center">
-                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block"></button>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
                 </div>
             </form>
         </div>
@@ -133,7 +153,7 @@
     <div id="student-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
         <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
             <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Tutor Paivinha</h1>
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Paivinha</h1>
                 <div class="flex items-center gap-4">
                     <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
                     <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors"></button>
