@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#1a73e8">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Tutor IA - Paivinha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
+        .view { display: none; }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+        /* [AJUSTE] Cores do balão de fala com as cores do tema */
+        .speech-bubble {
+            position: relative;
+            background: #4CAF50; /* verde-campo */
+            border-radius: .4em;
+            padding: 1.5rem;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        .dark .speech-bubble {
+            background: #FDD835; /* amarelo-sol */
+        }
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border: 20px solid transparent;
+            border-top-color: #4CAF50; /* verde-campo */
+            border-bottom: 0;
+            margin-left: -20px;
+            margin-bottom: -20px;
+            transition: border-top-color 0.3s;
+        }
+        .dark .speech-bubble:after {
+            border-top-color: #FDD835; /* amarelo-sol */
+        }
+        .loader {
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    }
+                }
+            }
+        }
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="transition-colors duration-300">
+
+    <div id="background-container"></div>
+
+    <!-- VISÃO DE CARREGAMENTO -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-marrom-terra dark:text-dark-text-secondary">A carregar...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <!-- [MODIFICADO] Removido bg-cover/center e ajustado o card de login -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4 transition-all duration-500">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Acesse seu painel de aprendizado.</p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Profº Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button id="theme-toggle-login" type="button" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <svg id="theme-toggle-dark-icon-login" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon-login" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISÃO DO ALUNO -->
+    <div id="student-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Paivinha</h1>
+                <div class="flex items-center gap-4">
+                    <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <button id="theme-toggle-student" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors"></button>
+                    <button id="logout-student" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
+            </div>
+        </header>
+        <main class="flex-grow flex items-center justify-center p-4">
+            <div class="w-full max-w-2xl">
+                <div class="flex flex-col items-center">
+                    <div id="speech-bubble-container" class="speech-bubble w-full text-center">
+                        <p id="paivinha-response-text" class="text-lg text-white dark:text-gray-800">Olá! Eu sou o Paivinha. Como posso te ajudar a aprender hoje?</p>
+                    </div>
+                    <img id="paivinha-image" src="https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fpaivinha.png?alt=media&token=53feb86f-3872-4447-916d-e7613f2f63e6" alt="Mascote Paivinha" class="w-80 h-80 mt-8">
+                </div>
+                <div class="mt-6">
+                    <form id="chat-form" class="flex items-center gap-3">
+                        <input type="text" id="message-input" placeholder="Digite sua pergunta para o Paivinha..." class="flex-1 w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-verde-campo dark:bg-dark-bg dark:border-dark-border dark:text-dark-text">
+                        <button type="submit" id="submit-button" class="bg-verde-campo text-white p-3 rounded-full hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo dark:focus:ring-offset-dark-card">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- VISÃO DO PROFESSOR -->
+    <div id="teacher-view" class="view flex flex-col min-h-screen bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md">
+        <header class="bg-white/80 dark:bg-dark-card/80 shadow-sm sticky top-0 z-10 backdrop-blur-md">
+            <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-marrom-terra dark:text-dark-text">Treinar o Paivinha</h1>
+                <div class="flex items-center gap-4">
+                     <a href="App_Painel.html" class="text-sm font-semibold text-verde-campo hover:bg-verde-campo/10 dark:hover:bg-verde-campo/20 p-2 rounded-md transition-colors">Painel Principal</a>
+                    <button id="theme-toggle-teacher" class="p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors"></button>
+                    <button id="logout-teacher" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+                </div>
+            </div>
+        </header>
+        <main class="flex-grow p-8">
+            <div class="max-w-4xl mx-auto bg-white/90 dark:bg-dark-card/90 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold text-marrom-terra dark:text-dark-text mb-2">Instruções e Contexto da IA</h2>
+                <p class="text-sm text-gray-600 dark:text-dark-text-secondary mb-4">
+                    Edite o texto abaixo para "treinar" a personalidade e o conhecimento do Paivinha. Adicione regras, informações sobre a escola ou ajuste a forma como ele deve responder.
+                </p>
+                <textarea id="prompt-textarea" class="w-full h-96 p-4 border rounded-md dark:bg-dark-bg dark:border-dark-border dark:text-dark-text"
+                ></textarea>
+                <button id="save-prompt-btn" class="mt-4 w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90">Guardar Instruções</button>
+                <p id="save-status" class="text-center mt-2 text-sm"></p>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+            authDomain: "app-matematica-em-campo.firebaseapp.com",
+            projectId: "app-matematica-em-campo",
+            storageBucket: "app-matematica-em-campo.firebasestorage.app",
+            messagingSenderId: "177907988624",
+            appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const themeToggles = [document.getElementById('theme-toggle-login'), document.getElementById('theme-toggle-student'), document.getElementById('theme-toggle-teacher')];
+        const backgroundContainer = document.getElementById('background-container');
+        const bubbleContainer = document.getElementById('speech-bubble-container');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const submitButton = document.getElementById('submit-button');
+        const paivinhaImage = document.getElementById('paivinha-image');
+        const promptTextarea = document.getElementById('prompt-textarea');
+        const savePromptBtn = document.getElementById('save-prompt-btn');
+        const saveStatus = document.getElementById('save-status');
+
+        const USER_API_KEY = "AIzaSyBnEo6RNhqgTBnJ3B59g0KN_VVu69LgN6E";
+        const paivinhaStaticUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fpaivinha.png?alt=media&token=53feb86f-3872-4447-916d-e7613f2f63e6';
+        const paivinhaAnimatedUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fpaivinha.gif?alt=media&token=a6877992-7b30-45c0-8c48-a53dad7b8701';
+        const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+        const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+
+        let chatHistory = [];
+        let speechInterval;
+        let paivinhaPromptContext = `Você é 'Paivinha', um tutor de IA amigável e um mascote para alunos de uma escola rural no Brasil.
+Seu público são crianças e adolescentes do 6º ao 9º ano.
+Sua personalidade é encorajadora, curiosa e brincalhona. Use uma linguagem simples e emojis.
+Você deve ajudar com matemática, ciências (agricultura, natureza), e português, de forma didática e contextualizada com a vida no campo.
+NUNCA saia do personagem. Responda de forma concisa.`;
+
+        const showView = (viewId) => {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const viewToShow = document.getElementById(viewId);
+            if(viewToShow) viewToShow.style.display = 'flex';
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    const profile = userDocSnap.data();
+                    if (profile.role === 'professor') {
+                        loadPromptForTeacher();
+                        showView('teacher-view');
+                    } else {
+                        showView('student-view');
+                    }
+                } else {
+                    await signOut(auth);
+                }
+            } else {
+                showView('login-view');
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorP = document.getElementById('login-error');
+            const button = document.getElementById('login-button');
+            errorP.textContent = '';
+            button.disabled = true; button.textContent = 'A entrar...';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                errorP.textContent = 'Utilizador ou senha inválidos.';
+            } finally {
+                button.disabled = false; button.textContent = 'Entrar';
+            }
+        });
+        
+        document.getElementById('logout-student').addEventListener('click', () => signOut(auth));
+        document.getElementById('logout-teacher').addEventListener('click', () => signOut(auth));
+
+        const updateThemeVisuals = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = isDark ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>`;
+            themeToggles.forEach(btn => { if(btn) btn.innerHTML = icon });
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            }
+            const responseText = document.getElementById('paivinha-response-text');
+            if(responseText) {
+                 responseText.classList.toggle('text-white', !isDark);
+                 responseText.classList.toggle('dark:text-gray-800', isDark);
+            }
+        };
+        themeToggles.forEach(btn => {
+            if(btn) btn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                updateThemeVisuals();
+            });
+        });
+        updateThemeVisuals();
+
+        async function loadPromptForTeacher() {
+            const promptRef = doc(db, "app_settings", "tutor_prompt");
+            const docSnap = await getDoc(promptRef);
+            if (docSnap.exists()) {
+                promptTextarea.value = docSnap.data().context;
+            } else {
+                promptTextarea.value = paivinhaPromptContext;
+            }
+        }
+
+        savePromptBtn.addEventListener('click', async () => {
+            const newContext = promptTextarea.value;
+            saveStatus.textContent = "A guardar...";
+            saveStatus.style.color = "gray";
+            try {
+                const promptRef = doc(db, "app_settings", "tutor_prompt");
+                await setDoc(promptRef, { context: newContext });
+                saveStatus.textContent = "Instruções guardadas com sucesso!";
+                saveStatus.style.color = "green";
+            } catch (error) {
+                console.error("Erro ao guardar o prompt:", error);
+                saveStatus.textContent = "Erro ao guardar. Tente novamente.";
+                saveStatus.style.color = "red";
+            }
+        });
+
+        const showLoading = (isLoading) => {
+            if (isLoading) {
+                bubbleContainer.innerHTML = `<div class="loader"></div>`;
+            } else {
+                bubbleContainer.innerHTML = `<p id="paivinha-response-text" class="text-lg"></p>`;
+                updateThemeVisuals();
+            }
+        };
+
+        const resetUI = () => {
+            messageInput.disabled = false;
+            submitButton.disabled = false;
+            messageInput.focus();
+            paivinhaImage.src = paivinhaStaticUrl;
+            clearInterval(speechInterval);
+        };
+
+        const displayResponseInChunks = (fullText) => {
+            const sentences = fullText.match(/[^.!?]+[.!?\s]*|[^.!?]+$/g) || [fullText];
+            let currentIndex = 0;
+
+            const showNextSentence = () => {
+                const responseEl = document.getElementById('paivinha-response-text');
+                if (!responseEl) {
+                    clearInterval(speechInterval);
+                    return;
+                }
+                if (currentIndex < sentences.length) {
+                    responseEl.textContent = sentences[currentIndex].trim();
+                    currentIndex++;
+                } else {
+                    clearInterval(speechInterval);
+                    setTimeout(resetUI, 2000);
+                }
+            };
+
+            paivinhaImage.src = paivinhaAnimatedUrl;
+            showNextSentence(); 
+            speechInterval = setInterval(showNextSentence, 6000); 
+        };
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            messageInput.disabled = true;
+            submitButton.disabled = true;
+            messageInput.value = '';
+            showLoading(true);
+            clearInterval(speechInterval);
+
+            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+            try {
+                const promptRef = doc(db, "app_settings", "tutor_prompt");
+                const docSnap = await getDoc(promptRef);
+                if (docSnap.exists()) {
+                    paivinhaPromptContext = docSnap.data().context;
+                }
+
+                const fullPrompt = `${paivinhaPromptContext}
+                    Histórico da conversa: ${JSON.stringify(chatHistory)}
+                    Nova pergunta: "${userMessage}"
+                    Responda à nova pergunta.
+                `;
+
+                const payload = { contents: [{ role: "user", parts: [{ text: fullPrompt }] }] };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${USER_API_KEY}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+
+                const result = await response.json();
+                showLoading(false);
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                    const aiMessage = result.candidates[0].content.parts[0].text;
+                    displayResponseInChunks(aiMessage);
+                    chatHistory.push({ role: "model", parts: [{ text: aiMessage }] });
+                } else {
+                    document.getElementById('paivinha-response-text').textContent = 'Hmm, tive um probleminha para pensar na resposta. Você pode tentar perguntar de novo? 🤔';
+                    resetUI();
+                }
+
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                showLoading(false);
+                document.getElementById('paivinha-response-text').textContent = 'Ops! Minha conexão com o mundo das ideias falhou. 😅 Poderia repetir sua pergunta?';
+                resetUI();
+            }
+        });
+
+        showView('loading-view');
+    </script>
+</body>
+</html>
