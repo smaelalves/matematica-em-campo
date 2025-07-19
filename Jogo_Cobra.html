@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Colheita Deslizante - Matemática em Campo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script>
+        // Aplica o tema escuro antes do carregamento para evitar flash de conteúdo sem estilo
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS com a paleta de cores do projeto
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'verde-campo': '#4CAF50',
+                        'azul-ceu': '#81D4FA',
+                        'amarelo-sol': '#FDD835',
+                        'marrom-terra': '#8D6E63',
+                        'dark-bg': '#121212',
+                        'dark-card': '#1e1e1e',
+                        'dark-text': '#e0e0e0',
+                        'dark-text-secondary': '#b0b0b0',
+                        'dark-border': '#424242',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none; 
+            user-select: none; 
+        }
+        .game-title {
+            font-family: 'Press+Start+2P', cursive;
+        }
+        #gameArea {
+            position: relative;
+        }
+        canvas {
+            display: block;
+            background-image: url('https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundocobrinha.png?alt=media&token=ca8cf0ad-4339-4195-a383-2e81cb956eaa');
+            background-size: cover;
+            background-position: center;
+        }
+        .ui-overlay-top, .ui-overlay-bottom {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .ui-overlay-top {
+            top: 0;
+        }
+        .ui-overlay-bottom {
+            bottom: 0;
+            justify-content: center;
+            pointer-events: all;
+        }
+        .ui-panel {
+            background-color: rgba(141, 110, 99, 0.7); /* marrom-terra com transparência */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: all;
+        }
+        #food-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .food-item {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .food-item img {
+            width: 100%;
+            height: 100%;
+        }
+        .food-item .food-number {
+            position: absolute;
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000;
+        }
+        .view { display: none; }
+        .xp-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            color: #FDD835; /* amarelo-sol */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: xp-fade-up 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes xp-fade-up {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0; transform: translate(-50%, -150%) scale(1.5); }
+        }
+        .control-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .control-btn:active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    <div id="background-container"></div>
+
+    <!-- Tela de Carregamento -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md" style="display: flex;">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-verde-campo"></div>
+            <p id="loading-message" class="mt-4 text-marrom-terra dark:text-dark-text-secondary">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div id="login-view" class="view min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-marrom-terra dark:text-dark-text">Matemática em Campo</h1>
+                <p class="text-marrom-terra/80 dark:text-dark-text-secondary mt-2">Escola do Campo Francisco Alves de Paiva </p>
+                <p class="text-lg font-semibold text-marrom-terra dark:text-dark-text mt-4">Prof.º Ismael Alves</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Usuário (E-mail)</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-marrom-terra dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-verde-campo focus:border-verde-campo bg-white/50 dark:bg-dark-card/80 dark:border-dark-border dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center h-5"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-verde-campo hover:bg-verde-campo/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-campo">
+                        Entrar
+                    </button>
+                </div>
+                 <div class="mt-6 text-center">
+                    <button type="button" class="theme-toggle-btn p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors inline-block">
+                        <!-- Ícone será inserido pelo JS -->
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tela de Início do Aluno -->
+    <div id="start-screen-view" class="view min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl text-center">
+            <div class="absolute top-4 right-4 flex items-center gap-4">
+                 <button type="button" class="theme-toggle-btn p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                    <!-- Ícone será inserido pelo JS -->
+                </button>
+                <button id="start-screen-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+            </div>
+            <h2 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-2">Bem-vindo(a), <span id="start-screen-player-name"></span>!</h2>
+            <p class="text-lg text-marrom-terra/80 dark:text-dark-text-secondary mb-8">Pronto para a colheita?</p>
+            
+            <button id="start-game-btn" class="w-full sm:w-auto bg-verde-campo text-white font-bold py-3 px-10 rounded-lg shadow-lg hover:bg-verde-campo/90 transition-transform transform hover:scale-105 text-xl mb-8">Iniciar Jogo</button>
+            
+            <div class="mt-6">
+                <h3 class="text-2xl font-bold text-marrom-terra dark:text-dark-text mb-4 border-b-2 border-marrom-terra/20 dark:border-dark-border pb-2">🏆 Ranking do Jogo</h3>
+                <ul id="ranking-list" class="space-y-2 text-left max-h-60 overflow-y-auto pr-2">
+                    <!-- O ranking do aluno será preenchido aqui -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tela de Ranking do Professor -->
+    <div id="teacher-ranking-view" class="view min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl bg-white/80 dark:bg-black/70 backdrop-blur-md p-8 rounded-2xl shadow-xl text-center relative">
+             <div class="absolute top-4 right-4 flex items-center gap-4">
+                 <button type="button" class="theme-toggle-btn p-2 rounded-full text-marrom-terra dark:text-amarelo-sol hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                    <!-- Ícone será inserido pelo JS -->
+                </button>
+                <button id="teacher-logout-btn" class="text-sm font-semibold text-marrom-terra dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border p-2 rounded-md">Sair</button>
+            </div>
+            <h2 class="text-3xl font-bold text-marrom-terra dark:text-dark-text mb-8">Ranking Geral - Colheita Deslizante</h2>
+            
+            <div class="mt-6 bg-gray-50 dark:bg-dark-bg/50 p-4 rounded-lg">
+                <ul id="teacher-ranking-list" class="space-y-2 text-left max-h-96 overflow-y-auto pr-2">
+                    <!-- O ranking do professor será preenchido aqui -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Área do Jogo -->
+    <div id="gameArea" class="view w-full h-full">
+        <canvas id="gameCanvas"></canvas>
+        <div id="food-container"></div>
+        <div class="ui-overlay-top">
+            <div class="ui-panel">Acertos: <span id="score">0</span></div>
+            <div class="ui-panel">XP na Partida: <span id="sessionXpEl">0</span></div>
+        </div>
+        <div class="ui-overlay-bottom">
+            <button id="left-btn" class="control-btn mr-12">⬅️</button>
+            <div class="ui-panel">Multiplicação: <span id="problem"></span></div>
+            <button id="right-btn" class="control-btn ml-12">➡️</button>
+        </div>
+    </div>
+
+    <!-- Modal de Fim de Jogo -->
+    <div id="gameOverModal" class="hidden fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card w-full max-w-md text-marrom-terra dark:text-dark-text p-8 rounded-2xl shadow-xl text-center">
+            <h2 id="gameOverTitle" class="text-4xl font-bold mb-4">Fim de Jogo!</h2>
+            <p id="finalScore" class="text-2xl mb-2">Sua pontuação na partida: 0</p>
+            <p id="xpGained" class="text-2xl mb-8 text-amarelo-sol font-extrabold"></p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="restartGame()" class="w-full bg-verde-campo text-white font-bold py-3 rounded-lg hover:bg-verde-campo/90">Jogar Novamente</button>
+                <button onclick="logout()" class="w-full bg-gray-300 dark:bg-dark-border text-marrom-terra dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-400">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment, collection, query, where, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+            authDomain: "app-matematica-em-campo.firebaseapp.com",
+            projectId: "app-matematica-em-campo",
+            storageBucket: "app-matematica-em-campo.firebasestorage.app",
+            messagingSenderId: "177907988624",
+            appId: "1:177907988624:web:537abcda6e0778e9e20015"
+        };
+
+        // Inicialização do Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- ESTADO DO USUÁRIO ---
+        let currentUserProfile = null;
+        let userDocRef = null;
+        let gameHighScore = 0;
+
+        // --- ELEMENTOS DO DOM ---
+        const loadingView = document.getElementById('loading-view');
+        const loginView = document.getElementById('login-view');
+        const startScreenView = document.getElementById('start-screen-view');
+        const teacherRankingView = document.getElementById('teacher-ranking-view');
+        const gameAreaEl = document.getElementById('gameArea');
+        const loginForm = document.getElementById('login-form');
+        const loginErrorEl = document.getElementById('login-error');
+        const loginButton = document.getElementById('login-button');
+        const startScreenPlayerNameEl = document.getElementById('start-screen-player-name');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const startScreenLogoutBtn = document.getElementById('start-screen-logout-btn');
+        const teacherLogoutBtn = document.getElementById('teacher-logout-btn');
+        const rankingListEl = document.getElementById('ranking-list');
+        const teacherRankingListEl = document.getElementById('teacher-ranking-list');
+        const backgroundContainer = document.getElementById('background-container');
+        const themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const foodContainerEl = document.getElementById('food-container');
+        const problemEl = document.getElementById('problem');
+        const scoreEl = document.getElementById('score');
+        const sessionXpEl = document.getElementById('sessionXpEl');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const finalScoreEl = document.getElementById('finalScore');
+        const gameOverTitleEl = document.getElementById('gameOverTitle');
+        const xpGainedEl = document.getElementById('xpGained');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        
+        const lightBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoclaro.png?alt=media&token=2d5f2da1-2702-4238-b753-fa46f2c6b65f';
+        const darkBgUrl = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/background%2Ffundoescuro.png?alt=media&token=5a469325-3177-4dc9-87a9-7212f93277fa';
+
+
+        // --- CONFIGURAÇÕES DO JOGO ---
+        const snakeRadius = 17;
+        const foodRadius = 27;
+        let snake, food, score, gameLoop, currentProblem, gameOver, keys = {}, sessionXP;
+        let lastFoodPositions = [];
+        const speed = 3;
+
+        // --- FUNÇÕES DE CONTROLE DE VISIBILIDADE E TEMA ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const viewToShow = document.getElementById(viewId);
+            if (viewToShow) {
+                viewToShow.style.display = 'flex';
+                if (viewId === 'gameArea') {
+                    viewToShow.style.display = 'block';
+                    backgroundContainer.style.display = 'none';
+                } else {
+                    backgroundContainer.style.display = 'block';
+                }
+            }
+        }
+        
+        function updateThemeVisuals() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if(backgroundContainer) {
+                backgroundContainer.style.backgroundImage = `url('${isDark ? darkBgUrl : lightBgUrl}')`;
+            }
+            const lightIcon = `<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 7.072l.707-.707a1 1 0 10-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>`;
+            const darkIcon = `<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>`;
+            themeToggleBtns.forEach(btn => {
+                btn.innerHTML = isDark ? lightIcon : darkIcon;
+            });
+        }
+        
+        themeToggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                updateThemeVisuals();
+            });
+        });
+        
+        updateThemeVisuals(); // Call on initial load
+
+        // --- LÓGICA DE AUTENTICAÇÃO E DADOS ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                showView('loading-view');
+                document.getElementById('loading-message').textContent = 'Verificando perfil...';
+                
+                userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    currentUserProfile = { id: user.uid, ...userDoc.data() };
+                    
+                    if (currentUserProfile.role === 'professor') {
+                        showTeacherRanking();
+                    } else {
+                        gameHighScore = currentUserProfile.gameScores?.cobrinha || 0;
+                        showStartScreen();
+                    }
+                } else {
+                    loginErrorEl.textContent = "Perfil não encontrado.";
+                    await signOut(auth);
+                    showView('login-view');
+                }
+            } else {
+                currentUserProfile = null;
+                userDocRef = null;
+                showView('login-view');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            loginErrorEl.textContent = '';
+            loginButton.disabled = true;
+            loginButton.textContent = 'Entrando...';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginErrorEl.textContent = 'Usuário ou senha inválidos.';
+                loginButton.disabled = false;
+                loginButton.textContent = 'Entrar';
+            }
+        });
+
+        async function fetchAllStudents() {
+            const q = query(collection(db, "users"), where("role", "==", "aluno"));
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
+        }
+
+        async function loadAndRenderRanking(listElement, students, filterZeroScores = true) {
+            listElement.innerHTML = '<li>Carregando ranking...</li>';
+            try {
+                students.sort((a, b) => (b.gameScores?.cobrinha || 0) - (a.gameScores?.cobrinha || 0));
+                
+                let studentsToDisplay = students;
+                if (filterZeroScores) {
+                    studentsToDisplay = students.filter(s => s.gameScores?.cobrinha > 0);
+                }
+
+                listElement.innerHTML = '';
+                if (studentsToDisplay.length === 0) {
+                    listElement.innerHTML = '<li class="text-center text-marrom-terra/80 dark:text-dark-text-secondary">Nenhum aluno jogou ainda.</li>';
+                    return;
+                }
+
+                studentsToDisplay.forEach((student, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between p-2 rounded-lg';
+                    const isCurrentUser = currentUserProfile && student.id === currentUserProfile.id;
+                    if(isCurrentUser) {
+                        li.classList.add('bg-amarelo-sol/30');
+                    }
+
+                    const rank = index + 1;
+                    let rankEmoji = '';
+                    if (rank === 1) rankEmoji = '🥇';
+                    else if (rank === 2) rankEmoji = '🥈';
+                    else if (rank === 3) rankEmoji = '🥉';
+
+                    li.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="font-bold text-lg w-8 text-marrom-terra dark:text-dark-text">${rankEmoji || rank}</span>
+                            <span class="font-semibold text-marrom-terra dark:text-dark-text">${student.name}</span>
+                        </div>
+                        <span class="font-bold text-verde-campo">${student.gameScores?.cobrinha || 0} Pontos</span>
+                    `;
+                    listElement.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar ranking:", error);
+                listElement.innerHTML = '<li>Erro ao carregar o ranking.</li>';
+            }
+        }
+        
+        function calculateXp(score) {
+            if (score >= 50) return 20;
+            if (score >= 30) return 10;
+            if (score >= 20) return 5;
+            if (score >= 10) return 1;
+            return 0;
+        }
+
+        async function saveSessionXP(points) {
+            if (!userDocRef || points <= 0) return;
+
+            const batch = writeBatch(db);
+            batch.update(userDocRef, { xp: increment(points) });
+            const xpHistoryRef = doc(collection(db, "users", currentUserProfile.id, "xp_history"));
+            batch.set(xpHistoryRef, {
+                points: points,
+                reason: "Jogo: Colheita Deslizante",
+                date: serverTimestamp()
+            });
+
+            try {
+                await batch.commit();
+                currentUserProfile.xp = (currentUserProfile.xp || 0) + points;
+                console.log(`XP da partida (${points}) somado ao total e registrado no histórico.`);
+            } catch (error) {
+                console.error("Erro ao salvar XP da sessão:", error);
+            }
+        }
+
+        async function updateGameHighScore(finalScore) {
+            if (!userDocRef || finalScore <= gameHighScore) return;
+            gameHighScore = finalScore;
+            try {
+                await updateDoc(userDocRef, { "gameScores.cobrinha": finalScore });
+                console.log(`Novo recorde para Colheita Deslizante: ${finalScore}`);
+            } catch (error) {
+                console.error("Erro ao atualizar o recorde do jogo:", error);
+            }
+        }
+
+        function logout() {
+            signOut(auth).catch((error) => console.error("Erro ao sair:", error));
+        }
+        window.logout = logout;
+        startScreenLogoutBtn.addEventListener('click', logout);
+        teacherLogoutBtn.addEventListener('click', logout);
+
+
+        // --- FUNÇÕES DE CONTROLE DE TELA E JOGO ---
+        async function showStartScreen() {
+            startScreenPlayerNameEl.textContent = currentUserProfile.name.split(' ')[0];
+            const allStudents = await fetchAllStudents();
+            loadAndRenderRanking(rankingListEl, allStudents, true);
+            showView('start-screen-view');
+        }
+        
+        async function showTeacherRanking() {
+            const allStudents = await fetchAllStudents();
+            loadAndRenderRanking(teacherRankingListEl, allStudents, true); // Alterado para true
+            showView('teacher-ranking-view');
+        }
+
+        function startGame() {
+            showView('gameArea');
+            setupGame();
+        }
+        startGameBtn.addEventListener('click', startGame);
+
+        function setupGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            snake = { body: [{ x: canvas.width / 2, y: canvas.height / 2 }], angle: Math.random() * 2 * Math.PI, speed: speed, turnSpeed: 0.08, length: 8 };
+            food = [];
+            lastFoodPositions = [];
+            score = 0;
+            sessionXP = 0;
+            gameOver = false;
+            scoreEl.textContent = score;
+            sessionXpEl.textContent = sessionXP;
+            gameOverModal.style.display = 'none';
+            generateProblemAndFood();
+            if (gameLoop) cancelAnimationFrame(gameLoop);
+            mainLoop();
+        }
+        
+        function mainLoop() {
+            if (gameOver) return;
+            update();
+            draw();
+            gameLoop = requestAnimationFrame(mainLoop);
+        }
+
+        function update() {
+            if (keys['ArrowLeft']) snake.angle -= snake.turnSpeed;
+            if (keys['ArrowRight']) snake.angle += snake.turnSpeed;
+            const head = { x: snake.body[0].x + Math.cos(snake.angle) * snake.speed, y: snake.body[0].y + Math.sin(snake.angle) * snake.speed };
+            snake.body.unshift(head);
+            while (snake.body.length > snake.length) snake.body.pop();
+            for (let i = food.length - 1; i >= 0; i--) {
+                const f = food[i];
+                const distance = Math.hypot(head.x - f.x, head.y - f.y);
+                if (distance < snakeRadius + foodRadius) {
+                    if (f.value === currentProblem.answer) {
+                        score++;
+                        scoreEl.textContent = score;
+                        snake.length += 5;
+                        
+                        const newXp = calculateXp(score);
+                        if(newXp > sessionXP) {
+                            const xpGainedNow = newXp - sessionXP;
+                            sessionXP = newXp;
+                            sessionXpEl.textContent = sessionXP;
+                            const xpPopup = document.createElement('div');
+                            xpPopup.className = 'xp-popup';
+                            xpPopup.textContent = `+${xpGainedNow} XP`;
+                            gameAreaEl.appendChild(xpPopup);
+                            setTimeout(() => xpPopup.remove(), 1500);
+                        }
+
+                        generateProblemAndFood();
+                    } else {
+                        endGame(false);
+                        return;
+                    }
+                }
+            }
+            if (head.x < snakeRadius || head.x > canvas.width - snakeRadius || head.y < snakeRadius || head.y > canvas.height - snakeRadius) {
+                endGame(true);
+                return;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < snake.body.length; i++) {
+                const segment = snake.body[i];
+                ctx.beginPath();
+                ctx.arc(segment.x, segment.y, snakeRadius, 0, 2 * Math.PI);
+                const colorIntensity = 1 - (i / (snake.body.length - 1));
+                const greenValue = 100 + (colorIntensity * 155);
+                ctx.fillStyle = `rgb(255, ${greenValue}, 0)`;
+                ctx.fill();
+            }
+            const head = snake.body[0];
+            const eyeOffset = snakeRadius * 0.4;
+            const eyeRadius = snakeRadius * 0.3;
+            const eyeX1 = head.x + Math.cos(snake.angle + Math.PI / 2) * eyeOffset;
+            const eyeY1 = head.y + Math.sin(snake.angle + Math.PI / 2) * eyeOffset;
+            const eyeX2 = head.x + Math.cos(snake.angle - Math.PI / 2) * eyeOffset;
+            const eyeY2 = head.y + Math.sin(snake.angle - Math.PI / 2) * eyeOffset;
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(eyeX1, eyeY1, eyeRadius * 2, 0, 2 * Math.PI); ctx.arc(eyeX2, eyeY2, eyeRadius * 2, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(eyeX1, eyeY1, eyeRadius, 0, 2 * Math.PI); ctx.arc(eyeX2, eyeY2, eyeRadius, 0, 2 * Math.PI); ctx.fill();
+        }
+
+        function generateProblemAndFood() {
+            lastFoodPositions = food.map(f => ({x: f.x, y: f.y}));
+            foodContainerEl.innerHTML = '';
+            food = [];
+            
+            let num1, num2;
+            if (score < 10) { // Tabuada de 1, 0, 10, 2
+                const tables = [0, 1, 2, 10];
+                num1 = tables[Math.floor(Math.random() * tables.length)];
+                num2 = Math.floor(Math.random() * 11);
+            } else if (score < 20) { // Tabuada de 3, 4, 5, 6
+                const tables = [3, 4, 5, 6];
+                num1 = tables[Math.floor(Math.random() * tables.length)];
+                num2 = Math.floor(Math.random() * 9) + 2;
+            } else if (score < 40) { // Tabuada de 7, 9, 8
+                const tables = [7, 8, 9];
+                num1 = tables[Math.floor(Math.random() * tables.length)];
+                num2 = Math.floor(Math.random() * 9) + 2;
+            } else { // Números acima de 15 até 100
+                num1 = Math.floor(Math.random() * 86) + 15;
+                num2 = Math.floor(Math.random() * 9) + 2;
+            }
+
+            const answer = num1 * num2;
+            currentProblem = { text: `${num1} × ${num2}`, answer: answer };
+            problemEl.innerHTML = currentProblem.text;
+            let options = [answer];
+            while (options.length < 4) {
+                const offset = Math.floor(Math.random() * 10) + 1;
+                const wrongAnswer = answer + (Math.random() < 0.5 ? offset : -offset);
+                if (!options.includes(wrongAnswer) && wrongAnswer >= 0) options.push(wrongAnswer);
+            }
+            options.sort(() => Math.random() - 0.5);
+            
+            const minDistance = foodRadius * 3;
+
+            options.forEach(opt => {
+                let x, y, validPosition, attempts = 0;
+                do {
+                    validPosition = true;
+                    x = Math.random() * (canvas.width - foodRadius * 4) + foodRadius * 2;
+                    y = Math.random() * (canvas.height - foodRadius * 4) + foodRadius * 2;
+                    
+                    for(const f of food) {
+                        if (Math.hypot(x - f.x, y - f.y) < minDistance) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    if (!validPosition) continue;
+
+                    for(const pos of lastFoodPositions) {
+                         if (Math.hypot(x - pos.x, y - pos.y) < minDistance) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    attempts++;
+                } while (!validPosition && attempts < 50);
+
+
+                food.push({ x: x, y: y, value: opt });
+                const foodItem = document.createElement('div');
+                foodItem.className = 'food-item';
+                foodItem.style.left = `${x - foodRadius}px`; foodItem.style.top = `${y - foodRadius}px`;
+                foodItem.style.width = `${foodRadius * 2}px`; foodItem.style.height = `${foodRadius * 2}px`;
+                const img = document.createElement('img');
+                img.src = 'https://firebasestorage.googleapis.com/v0/b/app-matematica-em-campo.firebasestorage.app/o/icones%2Fcajuicon.gif?alt=media&token=fe27242b-86f6-4a60-8577-fa0180455a6f';
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'food-number';
+                numberSpan.style.fontSize = `${foodRadius / 1.5}px`;
+                numberSpan.textContent = opt;
+                foodItem.appendChild(img); foodItem.appendChild(numberSpan);
+                foodContainerEl.appendChild(foodItem);
+            });
+        }
+
+        function endGame(isCollision) {
+            if (gameOver) return;
+            gameOver = true;
+            updateGameHighScore(score);
+            saveSessionXP(sessionXP);
+            
+            gameOverTitleEl.textContent = isCollision ? "Bateu!" : "Resposta Errada!";
+            finalScoreEl.textContent = `Sua pontuação na partida: ${score}`;
+            xpGainedEl.textContent = `Você ganhou ${sessionXP} XP nesta partida!`;
+            gameOverModal.style.display = 'flex';
+        }
+
+        function restartGame() {
+            gameOverModal.style.display = 'none';
+            if (currentUserProfile.role === 'professor') {
+                showTeacherRanking();
+            } else {
+                showStartScreen();
+            }
+        }
+        window.restartGame = restartGame;
+
+        // --- LISTENERS DE EVENTOS ---
+        window.addEventListener('keydown', e => { if(e.key === 'ArrowLeft' || e.key === 'ArrowRight') keys[e.key] = true; });
+        window.addEventListener('keyup', e => { if(e.key === 'ArrowLeft' || e.key === 'ArrowRight') keys[e.key] = false; });
+        
+        leftBtn.addEventListener('mousedown', () => keys['ArrowLeft'] = true);
+        leftBtn.addEventListener('mouseup', () => keys['ArrowLeft'] = false);
+        leftBtn.addEventListener('mouseleave', () => keys['ArrowLeft'] = false);
+        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowLeft'] = true; });
+        leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowLeft'] = false; });
+
+        rightBtn.addEventListener('mousedown', () => keys['ArrowRight'] = true);
+        rightBtn.addEventListener('mouseup', () => keys['ArrowRight'] = false);
+        rightBtn.addEventListener('mouseleave', () => keys['ArrowRight'] = false);
+        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowRight'] = true; });
+        rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowRight'] = false; });
+
+        window.addEventListener('resize', () => {
+            if (gameAreaEl.style.display === 'block' && !gameOver) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+
+        // --- INICIA A APLICAÇÃO ---
+        showView('loading-view');
+
+    </script>
+</body>
+</html>
