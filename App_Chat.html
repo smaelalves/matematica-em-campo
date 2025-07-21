@@ -88,6 +88,9 @@
             background-color: #374151; /* gray-700 */
             color: #E5E7EB; /* gray-200 */
         }
+        .message-container:hover .delete-message-btn {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="font-sans transition-colors duration-300 bg-light-bg dark:bg-dark-bg">
@@ -180,9 +183,11 @@
                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                             </button>
                              <div id="chat-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-dark-card rounded-md shadow-lg z-50 border dark:border-gray-700">
-                                <a href="App_Painel.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-600">Painel Principal</a>
-                                <button id="chat-theme-toggle-menu" class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-600">Trocar Tema</button>
-                                <button id="chat-logout-menu-btn" class="w-full text-left block px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600">Sair</button>
+                                <!-- [MODIFICADO] Opções de professor simplificadas -->
+                                <div id="teacher-chat-options" class="hidden">
+                                    <button id="edit-chat-btn" class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-600">Editar Chat</button>
+                                    <button id="delete-chat-btn" class="w-full text-left block px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600">Apagar Chat</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -238,12 +243,43 @@
             </div>
         </div>
     </div>
+    
+    <div id="edit-chat-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-md w-full max-h-[90vh] flex flex-col">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-dark-text mb-4">Editar Chat</h2>
+            <form id="edit-chat-form" class="space-y-4 flex-grow overflow-y-auto pr-2">
+                <input type="hidden" id="edit-chat-id">
+                <div>
+                    <label for="edit-chat-name" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Nome do Grupo</label>
+                    <input id="edit-chat-name" type="text" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text" required>
+                </div>
+                <div>
+                    <label for="edit-chat-image-url" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">URL da Imagem do Grupo</label>
+                    <input id="edit-chat-image-url" type="text" placeholder="https://exemplo.com/imagem.png" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text">
+                </div>
+                 <div>
+                    <label for="edit-chat-background-url" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">URL do Fundo do Chat</label>
+                    <input id="edit-chat-background-url" type="text" placeholder="https://exemplo.com/fundo.png" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Gerir Alunos Participantes</label>
+                    <div id="edit-chat-student-list" class="mt-2 p-3 border rounded-md h-48 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-gray-600 text-sm space-y-2">
+                        <!-- Lista de alunos para edição será inserida aqui -->
+                    </div>
+                </div>
+            </form>
+             <div class="flex gap-4 pt-4 border-t dark:border-gray-700 mt-auto">
+                <button type="button" id="cancel-chat-edition-btn" class="w-1/2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-300">Cancelar</button>
+                <button type="submit" form="edit-chat-form" class="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90">Guardar Alterações</button>
+            </div>
+        </div>
+    </div>
 
     <div id="online-users-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-sm w-full">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-dark-text mb-4">Usuários Online</h3>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-dark-text mb-4">Utilizadores Online</h3>
             <ul id="online-users-list" class="space-y-2 max-h-60 overflow-y-auto">
-                <!-- Lista de usuários online será inserida aqui -->
+                <!-- Lista de utilizadores online será inserida aqui -->
             </ul>
             <button id="close-online-users-modal-btn" class="mt-6 w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 font-bold">Fechar</button>
         </div>
@@ -255,12 +291,24 @@
             <button id="notification-ok-btn" class="mt-6 w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 font-bold">OK</button>
         </div>
     </div>
+    
+    <!-- [NOVO] Modal de confirmação para apagar -->
+    <div id="confirm-delete-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg text-center max-w-sm w-full">
+            <h3 id="confirm-delete-title" class="text-xl font-bold text-gray-800 dark:text-dark-text mb-2">Confirmar Ação</h3>
+            <p id="confirm-delete-message" class="text-gray-600 dark:text-dark-text-secondary mb-6"></p>
+            <div class="flex gap-4">
+                <button id="cancel-delete-btn" class="w-1/2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-dark-text font-bold py-2 rounded-lg hover:bg-gray-300">Cancelar</button>
+                <button id="confirm-delete-btn" class="w-1/2 bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700">Apagar</button>
+            </div>
+        </div>
+    </div>
 
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, onSnapshot, orderBy, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, onSnapshot, orderBy, updateDoc, deleteField, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
@@ -280,14 +328,18 @@
         let currentUserProfile = null;
         let allUsersCache = [];
         let currentChatId = null;
+        let currentChatData = null; 
         let unsubscribeFromMessages = null;
         let unsubscribeFromChats = null;
         let onlineStatusHeartbeat = null;
+        let deleteAction = null; 
 
         // --- ELEMENTOS DO DOM ---
         const loginForm = document.getElementById('login-form');
         const createChatForm = document.getElementById('create-chat-form');
+        const editChatForm = document.getElementById('edit-chat-form');
         const messageForm = document.getElementById('message-form');
+        const messagesContainer = document.getElementById('messages-container');
 
         // --- LÓGICA DE TEMA ---
         function setTheme(isDark) {
@@ -405,11 +457,6 @@
             chatDropdownMenu.classList.toggle('hidden');
         });
         document.addEventListener('click', () => chatDropdownMenu.classList.add('hidden'));
-        document.getElementById('chat-logout-menu-btn').addEventListener('click', () => signOut(auth));
-        document.getElementById('chat-theme-toggle-menu').addEventListener('click', () => {
-            setTheme(!document.documentElement.classList.contains('dark'));
-        });
-
 
         // --- LÓGICA DO PROFESSOR ---
         async function loadTeacherData() {
@@ -482,6 +529,136 @@
                 console.error("Erro ao criar chat: ", error);
                 showNotification("Ocorreu um erro ao criar o chat.");
             }
+        });
+
+        // --- Lógica para Editar Chat ---
+        document.getElementById('edit-chat-btn').addEventListener('click', async () => {
+            if (!currentChatId) return;
+            const chatRef = doc(db, 'chats', currentChatId);
+            const chatSnap = await getDoc(chatRef);
+            if (chatSnap.exists()) {
+                const chatData = chatSnap.data();
+                document.getElementById('edit-chat-id').value = currentChatId;
+                document.getElementById('edit-chat-name').value = chatData.name;
+                document.getElementById('edit-chat-image-url').value = chatData.imageUrl || '';
+                document.getElementById('edit-chat-background-url').value = chatData.backgroundUrl || '';
+
+                const studentListDiv = document.getElementById('edit-chat-student-list');
+                studentListDiv.innerHTML = '';
+                const students = allUsersCache.filter(u => u.role === 'aluno');
+                students.forEach(student => {
+                    const isParticipant = chatData.participants.includes(student.id);
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer';
+                    label.innerHTML = `
+                        <input type="checkbox" name="edit_student" value="${student.id}" data-name="${student.name}" class="edit-student-checkbox rounded mr-3 text-primary focus:ring-primary" ${isParticipant ? 'checked' : ''}>
+                        <span class="dark:text-dark-text">${student.name}</span>
+                    `;
+                    studentListDiv.appendChild(label);
+                });
+                
+                showModal('edit-chat-modal', true);
+            }
+        });
+
+        document.getElementById('cancel-chat-edition-btn').addEventListener('click', () => showModal('edit-chat-modal', false));
+
+        editChatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const chatId = document.getElementById('edit-chat-id').value;
+            const chatName = document.getElementById('edit-chat-name').value.trim();
+            const imageUrl = document.getElementById('edit-chat-image-url').value.trim();
+            const backgroundUrl = document.getElementById('edit-chat-background-url').value.trim();
+            const selectedCheckboxes = document.querySelectorAll('.edit-student-checkbox:checked');
+
+            if (!chatName || selectedCheckboxes.length === 0) {
+                showNotification("O nome do chat não pode estar vazio e deve ter pelo menos um aluno.");
+                return;
+            }
+
+            const participants = Array.from(selectedCheckboxes).map(cb => cb.value);
+            const participantNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.name);
+
+            try {
+                const chatRef = doc(db, 'chats', chatId);
+                await updateDoc(chatRef, {
+                    name: chatName,
+                    imageUrl: imageUrl || null,
+                    backgroundUrl: backgroundUrl || null,
+                    participants: participants,
+                    participantNames: participantNames,
+                });
+                showNotification("Chat atualizado com sucesso!");
+                showModal('edit-chat-modal', false);
+            } catch (error) {
+                console.error("Erro ao atualizar chat: ", error);
+                showNotification("Ocorreu um erro ao atualizar o chat.");
+            }
+        });
+        
+        // --- Lógica de Apagar (Chat e Mensagens) ---
+        document.getElementById('delete-chat-btn').addEventListener('click', () => {
+            document.getElementById('confirm-delete-title').textContent = "Apagar Chat";
+            document.getElementById('confirm-delete-message').textContent = "Tem a certeza que quer apagar este chat? Todas as mensagens serão perdidas permanentemente.";
+            deleteAction = { type: 'chat', id: currentChatId };
+            showModal('confirm-delete-modal');
+        });
+
+        messagesContainer.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-message-btn');
+            if (deleteBtn) {
+                const messageId = deleteBtn.dataset.messageId;
+                document.getElementById('confirm-delete-title').textContent = "Apagar Mensagem";
+                document.getElementById('confirm-delete-message').textContent = "Tem a certeza que quer apagar esta mensagem?";
+                deleteAction = { type: 'message', id: messageId };
+                showModal('confirm-delete-modal');
+            }
+        });
+
+        document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+            deleteAction = null;
+            showModal('confirm-delete-modal', false);
+        });
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (!deleteAction) return;
+
+            if (deleteAction.type === 'chat') {
+                try {
+                    // Apagar subcoleção de mensagens
+                    const messagesRef = collection(db, 'chats', deleteAction.id, 'messages');
+                    const messagesSnap = await getDocs(messagesRef);
+                    const batch = writeBatch(db);
+                    messagesSnap.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+
+                    // Apagar o chat
+                    await deleteDoc(doc(db, 'chats', deleteAction.id));
+                    showNotification("Chat apagado com sucesso.");
+                    
+                    if (unsubscribeFromMessages) unsubscribeFromMessages();
+                    clearInterval(onlineStatusHeartbeat);
+                    currentChatId = null;
+                    showView('dashboard-view');
+
+                } catch (error) {
+                    console.error("Erro ao apagar chat: ", error);
+                    showNotification("Ocorreu um erro ao apagar o chat.");
+                }
+            } else if (deleteAction.type === 'message') {
+                try {
+                    const messageRef = doc(db, 'chats', currentChatId, 'messages', deleteAction.id);
+                    await deleteDoc(messageRef);
+                    // A UI vai atualizar automaticamente por causa do onSnapshot
+                } catch (error) {
+                    console.error("Erro ao apagar mensagem:", error);
+                    showNotification("Falha ao apagar a mensagem.");
+                }
+            }
+            deleteAction = null;
+            showModal('confirm-delete-modal', false);
         });
 
         // --- LÓGICA DO ALUNO ---
@@ -578,15 +755,21 @@
                 showNotification("Chat não encontrado.");
                 return;
             }
-            const chatData = chatSnap.data();
+            currentChatData = chatSnap.data(); 
 
-            document.getElementById('chat-name-header').textContent = chatData.name;
-            document.getElementById('chat-header-image').src = chatData.imageUrl || 'https://placehold.co/40x40/E2E8F0/4A5568?text=?';
-            const messagesContainer = document.getElementById('messages-container');
-            if (chatData.backgroundUrl) {
-                messagesContainer.style.backgroundImage = `url('${chatData.backgroundUrl}')`;
+            document.getElementById('chat-name-header').textContent = currentChatData.name;
+            document.getElementById('chat-header-image').src = currentChatData.imageUrl || 'https://placehold.co/40x40/E2E8F0/4A5568?text=?';
+            if (currentChatData.backgroundUrl) {
+                messagesContainer.style.backgroundImage = `url('${currentChatData.backgroundUrl}')`;
             } else {
                 messagesContainer.style.backgroundImage = '';
+            }
+
+            const teacherOptions = document.getElementById('teacher-chat-options');
+            if (currentUserProfile.role === 'professor' && currentChatData.createdBy === currentUserProfile.id) {
+                teacherOptions.classList.remove('hidden');
+            } else {
+                teacherOptions.classList.add('hidden');
             }
 
             showView('chat-view');
@@ -596,49 +779,63 @@
         }
 
         function listenForMessages(chatId) {
-            const messagesContainer = document.getElementById('messages-container');
             messagesContainer.innerHTML = '<div class="loader mx-auto"></div>';
+            const isChatOwner = currentUserProfile.role === 'professor' && currentChatData.createdBy === currentUserProfile.id;
 
             const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp'));
             if (unsubscribeFromMessages) unsubscribeFromMessages();
             
-            // Listener para as mensagens
             unsubscribeFromMessages = onSnapshot(q, (snapshot) => {
                 messagesContainer.innerHTML = '';
                 snapshot.forEach(doc => {
-                    const message = doc.data();
+                    const message = { id: doc.id, ...doc.data() };
                     const senderProfile = allUsersCache.find(u => u.id === message.senderId);
                     const photoURL = senderProfile?.photoURL || 'https://placehold.co/100x100/E2E8F0/4A5568?text=?';
 
                     const messageEl = document.createElement('div');
                     const isSender = message.senderId === currentUserProfile.id;
-
-                    messageEl.className = `flex items-end gap-3 ${isSender ? 'flex-row-reverse' : 'flex-row'}`;
+                    messageEl.className = `message-container flex items-center gap-2 ${isSender ? 'flex-row-reverse' : 'flex-row'}`;
                     
                     const bubbleClass = isSender ? 'message-bubble-sent' : 'message-bubble-received';
+                    const deleteButtonHtml = isChatOwner ? `
+                        <button data-message-id="${message.id}" class="delete-message-btn opacity-0 transition-opacity p-1 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600">
+                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    ` : '';
 
-                    messageEl.innerHTML = `
-                        <img src="${photoURL}" class="w-8 h-8 rounded-full object-cover self-start">
-                        <div class="max-w-xs md:max-w-md lg:max-w-lg">
-                            ${!isSender ? `<p class="text-xs text-gray-500 dark:text-dark-text-secondary mb-1 ml-2">${message.senderName}</p>` : ''}
-                            <div class="p-3 ${bubbleClass}">
-                                <p class="break-words">${message.text}</p>
+                    const messageContent = `
+                        <div class="flex items-end gap-3 ${isSender ? 'flex-row-reverse' : ''}">
+                            <img src="${photoURL}" class="w-8 h-8 rounded-full object-cover self-start">
+                            <div class="max-w-xs md:max-w-md lg:max-w-lg">
+                                ${!isSender ? `<p class="text-xs text-gray-500 dark:text-dark-text-secondary mb-1 ml-2">${message.senderName}</p>` : ''}
+                                <div class="p-3 ${bubbleClass}">
+                                    <p class="break-words">${message.text}</p>
+                                </div>
                             </div>
                         </div>
                     `;
+
+                    messageEl.innerHTML = isSender ? `${deleteButtonHtml}${messageContent}` : `${messageContent}${deleteButtonHtml}`;
                     messagesContainer.appendChild(messageEl);
                 });
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             });
 
-            // Listener para o status online do chat
             const chatRef = doc(db, 'chats', chatId);
             onSnapshot(chatRef, (doc) => {
+                // [CORRIGIDO] Adiciona verificação para ver se o chat ainda existe
+                if (!doc.exists()) {
+                    console.warn("O documento do chat foi apagado.");
+                    // Força o retorno ao painel se o chat for apagado
+                    document.getElementById('back-to-dashboard-btn').click();
+                    return;
+                }
                 const chatData = doc.data();
+                currentChatData = chatData; // Atualiza o cache
                 const now = Date.now();
                 let onlineCount = 0;
                 let onlineUsers = [];
-                if (chatData.onlineStatus) {
+                if (chatData && chatData.onlineStatus) { // Adiciona verificação extra para chatData
                     Object.entries(chatData.onlineStatus).forEach(([userId, timestamp]) => {
                         if (timestamp && (now - timestamp.toDate().getTime()) < 35000) {
                             onlineCount++;
@@ -681,7 +878,7 @@
                         senderName: currentUserProfile.name || 'Usuário',
                         timestamp: serverTimestamp()
                     });
-                    updateUserOnlineStatus(currentChatId, true); // Atualiza o status ao enviar msg
+                    updateUserOnlineStatus(currentChatId, true);
                 } catch (error) {
                     console.error("Erro ao enviar mensagem: ", error);
                     showNotification("Não foi possível enviar a mensagem.");
@@ -693,9 +890,12 @@
         document.getElementById('back-to-dashboard-btn').addEventListener('click', () => {
             if (unsubscribeFromMessages) unsubscribeFromMessages();
             clearInterval(onlineStatusHeartbeat);
-            updateUserOnlineStatus(currentChatId, false);
+            if (currentChatId) {
+                updateUserOnlineStatus(currentChatId, false);
+            }
             currentChatId = null;
-            document.getElementById('messages-container').style.backgroundImage = ''; // Limpa o fundo
+            currentChatData = null;
+            messagesContainer.style.backgroundImage = '';
             showView('dashboard-view');
         });
 
