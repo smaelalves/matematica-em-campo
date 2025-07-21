@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta id="theme-color-meta" name="theme-color" content="#FFFFFF">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>App Chat - Matemática em Campo</title>
+    <!-- Fontes e Estilos Visuais -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Script para aplicar o tema escuro antes do carregamento da página para evitar FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script>
+        // Configuração do Tailwind CSS com a nova paleta de cores
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#6D28D9', // Roxo principal
+                        'primary-light': '#EDE9FE',
+                        'secondary': '#1D4ED8', // Azul secundário
+                        'light-bg': '#F9FAFB',
+                        'dark-bg': '#111827',
+                        'dark-card': '#1F2937',
+                        'dark-text': '#E5E7EB',
+                        'dark-text-secondary': '#9CA3AF',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos customizados */
+        .view, .modal { display: none; }
+        .loader {
+            border: 4px solid #9CA3AF;
+            border-top: 4px solid #6D28D9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #messages-container {
+            scroll-behavior: smooth;
+            background-size: cover;
+            background-position: center;
+        }
+        .message-bubble-sent {
+            background-color: #6D28D9; /* primary */
+            color: white;
+            border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+        }
+        .message-bubble-received {
+            background-color: #E5E7EB; /* gray-200 */
+            color: #1F2937; /* gray-800 */
+            border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+        }
+        .dark .message-bubble-received {
+            background-color: #374151; /* gray-700 */
+            color: #E5E7EB; /* gray-200 */
+        }
+    </style>
+</head>
+<body class="font-sans transition-colors duration-300 bg-light-bg dark:bg-dark-bg">
+
+    <!-- VISÃO 0: CARREGAMENTO INICIAL -->
+    <div id="loading-view" class="view min-h-screen flex items-center justify-center p-4" style="display: flex;">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-gray-600 dark:text-dark-text-secondary">A carregar...</p>
+        </div>
+    </div>
+
+    <!-- VISÃO 1: LOGIN -->
+    <div id="login-view" class="view min-h-screen items-center justify-center p-4 bg-gray-100 dark:bg-dark-bg">
+        <div class="w-full max-w-md bg-white dark:bg-dark-card p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-primary dark:text-white">Bem-vindo ao Chat</h1>
+                <p class="text-gray-500 dark:text-dark-text-secondary mt-2">Colabore e aprenda em equipa.</p>
+            </div>
+            <form id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">E-mail</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-gray-50 dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Senha</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-gray-50 dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text" required>
+                    </div>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                <div class="mt-6">
+                    <button type="submit" id="login-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white bg-primary hover:bg-primary/90">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISÃO 2 & 3: PAINEL DE CHATS (PROFESSOR E ALUNO) -->
+    <div id="dashboard-view" class="view flex-col h-screen max-w-md mx-auto bg-white dark:bg-dark-card shadow-2xl">
+        <header class="p-4 border-b dark:border-gray-700">
+            <div class="flex justify-between items-center relative">
+                <div id="user-info-header" class="flex items-center gap-3">
+                    <!-- Foto do usuário aqui -->
+                </div>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-dark-text absolute left-1/2 -translate-x-1/2">Conversas</h1>
+                <div class="relative">
+                    <button id="menu-button" class="text-gray-600 dark:text-dark-text-secondary p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                    </button>
+                    <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-dark-card rounded-md shadow-lg z-50 border dark:border-gray-700">
+                        <a href="App_Painel.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-600">Painel Principal</a>
+                        <button id="theme-toggle-menu" class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-600">Trocar Tema</button>
+                        <button id="logout-menu-btn" class="w-full text-left block px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600">Sair</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 relative">
+                <input type="text" id="search-chats" placeholder="Pesquisar chats..." class="w-full pl-10 pr-4 py-2 border rounded-full bg-gray-100 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+        </header>
+        <main id="chats-list-container" class="flex-grow p-2 overflow-y-auto">
+            <!-- Lista de chats aqui -->
+        </main>
+        <button id="open-create-chat-modal-btn" class="hidden absolute bottom-6 right-6 bg-primary text-white w-14 h-14 rounded-full shadow-lg items-center justify-center text-3xl">+</button>
+    </div>
+
+
+    <!-- VISÃO 4: TELA DE CHAT -->
+    <div id="chat-view" class="view flex-col h-screen max-w-md mx-auto bg-white dark:bg-dark-bg shadow-2xl">
+        <header class="bg-white dark:bg-dark-card shadow-sm sticky top-0 z-20 p-3">
+            <div class="flex items-center gap-3">
+                <button id="back-to-dashboard-btn" class="text-gray-600 dark:text-dark-text-secondary p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">&larr;</button>
+                <img id="chat-header-image" src="" class="w-10 h-10 rounded-full object-cover">
+                <div class="flex-grow">
+                     <h1 id="chat-name-header" class="font-bold text-gray-800 dark:text-dark-text"></h1>
+                     <button id="online-status-btn" class="text-xs text-green-500 font-semibold">● 0 online</button>
+                </div>
+            </div>
+        </header>
+        <main id="messages-container" class="flex-grow p-4 overflow-y-auto space-y-4 bg-gray-100 dark:bg-dark-bg">
+            <!-- Mensagens serão inseridas aqui -->
+        </main>
+        <footer class="bg-white dark:bg-dark-card p-2 shadow-inner sticky bottom-0">
+            <form id="message-form" class="flex items-center gap-2">
+                <input id="message-input" type="text" placeholder="Escreva uma mensagem..." autocomplete="off" class="flex-grow p-3 border-none rounded-full focus:outline-none bg-gray-100 dark:bg-gray-700 dark:text-white">
+                <button type="submit" class="bg-primary text-white rounded-full p-3 hover:bg-primary/90">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+
+    <!-- MODAIS -->
+    <div id="create-chat-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-md w-full max-h-[90vh] flex flex-col">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-dark-text mb-4">Criar Novo Chat</h2>
+            <form id="create-chat-form" class="space-y-4 flex-grow overflow-y-auto pr-2">
+                <div>
+                    <label for="new-chat-name" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Nome do Grupo</label>
+                    <input id="new-chat-name" type="text" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text" required>
+                </div>
+                <div>
+                    <label for="new-chat-image-url" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">URL da Imagem do Grupo</label>
+                    <input id="new-chat-image-url" type="text" placeholder="https://exemplo.com/imagem.png" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text">
+                </div>
+                 <div>
+                    <label for="new-chat-background-url" class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">URL do Fundo do Chat</label>
+                    <input id="new-chat-background-url" type="text" placeholder="https://exemplo.com/fundo.png" class="mt-1 w-full p-2 border rounded-md dark:bg-dark-bg dark:border-gray-600 dark:text-dark-text">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary">Selecionar Alunos</label>
+                    <div id="new-chat-student-list" class="mt-2 p-3 border rounded-md h-48 overflow-y-auto bg-gray-50 dark:bg-dark-bg dark:border-gray-600 text-sm space-y-2">
+                        <!-- Lista de alunos com checkboxes será inserida aqui -->
+                    </div>
+                </div>
+            </form>
+             <div class="flex gap-4 pt-4 border-t dark:border-gray-700 mt-auto">
+                <button type="button" id="cancel-chat-creation-btn" class="w-1/2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-dark-text font-bold py-3 rounded-lg hover:bg-gray-300">Cancelar</button>
+                <button type="submit" form="create-chat-form" class="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90">Criar Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="online-users-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-sm w-full">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-dark-text mb-4">Usuários Online</h3>
+            <ul id="online-users-list" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- Lista de usuários online será inserida aqui -->
+            </ul>
+            <button id="close-online-users-modal-btn" class="mt-6 w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 font-bold">Fechar</button>
+        </div>
+    </div>
+
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
+            <p id="notification-message" class="text-lg text-gray-800 dark:text-dark-text"></p>
+            <button id="notification-ok-btn" class="mt-6 w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 font-bold">OK</button>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp, onSnapshot, orderBy, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvNF1gTqxLU1pyox1M1RU9JXEpY-6U9Nw",
+            authDomain: "app-matematica-em-campo.firebaseapp.com",
+            projectId: "app-matematica-em-campo",
+            storageBucket: "app-matematica-em-campo.firebasestorage.app",
+            messagingSenderId: "177907988624",
+            appId: "1:177907988624:web:537abcda6e0778e20015"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- VARIÁVEIS GLOBAIS ---
+        let currentUserProfile = null;
+        let allUsersCache = [];
+        let currentChatId = null;
+        let unsubscribeFromMessages = null;
+        let unsubscribeFromChats = null;
+        let onlineStatusHeartbeat = null;
+
+        // --- ELEMENTOS DO DOM ---
+        const loginForm = document.getElementById('login-form');
+        const createChatForm = document.getElementById('create-chat-form');
+        const messageForm = document.getElementById('message-form');
+
+        // --- LÓGICA DE TEMA ---
+        function setTheme(isDark) {
+             if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            }
+        }
+
+        // --- FUNÇÕES DE UI ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const viewToShow = document.getElementById(viewId);
+            if (viewToShow) {
+                viewToShow.style.display = 'flex';
+            }
+        }
+        
+        function showModal(modalId, show = true) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function showNotification(message) {
+            document.getElementById('notification-message').textContent = message;
+            showModal('notification-modal', true);
+        }
+        document.getElementById('notification-ok-btn').addEventListener('click', () => showModal('notification-modal', false));
+
+        // --- LÓGICA DE AUTENTICAÇÃO E SETUP ---
+        onAuthStateChanged(auth, async (user) => {
+            if (unsubscribeFromMessages) unsubscribeFromMessages();
+            if (unsubscribeFromChats) unsubscribeFromChats();
+            clearInterval(onlineStatusHeartbeat);
+            currentChatId = null;
+
+            if (user) {
+                showView('loading-view');
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    currentUserProfile = { id: user.uid, ...userDocSnap.data() };
+                    
+                    const usersQuery = query(collection(db, "users"));
+                    const usersSnapshot = await getDocs(usersQuery);
+                    allUsersCache = usersSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    
+                    const userInfoHeader = document.getElementById('user-info-header');
+                    userInfoHeader.innerHTML = `
+                        <img src="${currentUserProfile.photoURL || 'https://placehold.co/40x40/E2E8F0/4A5568?text=?'}" class="w-10 h-10 rounded-full object-cover">
+                    `;
+
+                    if (currentUserProfile.role === 'professor') {
+                        document.getElementById('open-create-chat-modal-btn').classList.remove('hidden');
+                        document.getElementById('open-create-chat-modal-btn').classList.add('flex');
+                        showView('dashboard-view');
+                        loadTeacherData();
+                    } else {
+                        document.getElementById('open-create-chat-modal-btn').classList.add('hidden');
+                        document.getElementById('open-create-chat-modal-btn').classList.remove('flex');
+                        showView('dashboard-view');
+                        listenForStudentChats();
+                    }
+                } else {
+                    await signOut(auth);
+                }
+            } else {
+                currentUserProfile = null;
+                allUsersCache = [];
+                showView('login-view');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorP = document.getElementById('login-error');
+            const button = document.getElementById('login-button');
+            errorP.textContent = '';
+            button.disabled = true;
+            button.textContent = 'A entrar...';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                errorP.textContent = 'Utilizador ou senha inválidos.';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Entrar';
+            }
+        });
+
+        // --- LÓGICA DO MENU DROPDOWN ---
+        const menuButton = document.getElementById('menu-button');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        menuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => dropdownMenu.classList.add('hidden'));
+        document.getElementById('logout-menu-btn').addEventListener('click', () => signOut(auth));
+        document.getElementById('theme-toggle-menu').addEventListener('click', () => {
+            setTheme(!document.documentElement.classList.contains('dark'));
+        });
+
+
+        // --- LÓGICA DO PROFESSOR ---
+        async function loadTeacherData() {
+            const studentListDiv = document.getElementById('new-chat-student-list');
+            studentListDiv.innerHTML = '';
+            const students = allUsersCache.filter(u => u.role === 'aluno');
+            students.forEach(student => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" name="student" value="${student.id}" data-name="${student.name}" class="student-checkbox rounded mr-3 text-primary focus:ring-primary">
+                    <span class="dark:text-dark-text">${student.name}</span>
+                `;
+                studentListDiv.appendChild(label);
+            });
+            listenForTeacherChats();
+        }
+
+        function listenForTeacherChats() {
+            // FIX: Professor should only see chats they created to avoid permission errors.
+            const q = query(collection(db, 'chats'), where('createdBy', '==', currentUserProfile.id));
+            if (unsubscribeFromChats) unsubscribeFromChats();
+            unsubscribeFromChats = onSnapshot(q, (snapshot) => {
+                const chatsListContainer = document.getElementById('chats-list-container');
+                chatsListContainer.innerHTML = '';
+                if (snapshot.empty) {
+                    chatsListContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-dark-text-secondary p-4">Nenhum chat criado ainda.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const chat = { id: doc.id, ...doc.data() };
+                    const card = createChatCard(chat);
+                    chatsListContainer.appendChild(card);
+                });
+            });
+        }
+
+        document.getElementById('open-create-chat-modal-btn').addEventListener('click', () => showModal('create-chat-modal', true));
+        document.getElementById('cancel-chat-creation-btn').addEventListener('click', () => showModal('create-chat-modal', false));
+
+        createChatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const chatName = document.getElementById('new-chat-name').value.trim();
+            const imageUrl = document.getElementById('new-chat-image-url').value.trim();
+            const backgroundUrl = document.getElementById('new-chat-background-url').value.trim();
+            const selectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+            
+            if (!chatName || selectedCheckboxes.length === 0) {
+                showNotification("Por favor, dê um nome ao chat e selecione pelo menos um aluno.");
+                return;
+            }
+
+            const participants = Array.from(selectedCheckboxes).map(cb => cb.value);
+            const participantNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.name);
+
+            try {
+                await addDoc(collection(db, 'chats'), {
+                    name: chatName,
+                    imageUrl: imageUrl || null,
+                    backgroundUrl: backgroundUrl || null,
+                    participants: participants,
+                    participantNames: participantNames,
+                    createdBy: currentUserProfile.id,
+                    createdAt: serverTimestamp(),
+                    onlineStatus: {}
+                });
+                showNotification("Chat criado com sucesso!");
+                showModal('create-chat-modal', false);
+                createChatForm.reset();
+            } catch (error) {
+                console.error("Erro ao criar chat: ", error);
+                showNotification("Ocorreu um erro ao criar o chat.");
+            }
+        });
+
+        // --- LÓGICA DO ALUNO ---
+        function listenForStudentChats() {
+            const q = query(collection(db, 'chats'), where('participants', 'array-contains', currentUserProfile.id));
+            if (unsubscribeFromChats) unsubscribeFromChats();
+            unsubscribeFromChats = onSnapshot(q, (snapshot) => {
+                const chatsListContainer = document.getElementById('chats-list-container');
+                chatsListContainer.innerHTML = '';
+                 if (snapshot.empty) {
+                    chatsListContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-dark-text-secondary p-4">Ainda não participa em nenhum chat.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const chat = { id: doc.id, ...doc.data() };
+                    const card = createChatCard(chat);
+                    chatsListContainer.appendChild(card);
+                });
+            });
+        }
+        
+        // --- LÓGICA DE STATUS ONLINE ---
+        async function updateUserOnlineStatus(chatId, isOnline) {
+            if (!chatId || !currentUserProfile) return;
+            const chatRef = doc(db, 'chats', chatId);
+            const statusUpdate = {};
+            if (isOnline) {
+                statusUpdate[`onlineStatus.${currentUserProfile.id}`] = serverTimestamp();
+            } else {
+                statusUpdate[`onlineStatus.${currentUserProfile.id}`] = deleteField();
+            }
+            await updateDoc(chatRef, statusUpdate);
+        }
+
+        function startHeartbeat(chatId) {
+            clearInterval(onlineStatusHeartbeat);
+            onlineStatusHeartbeat = setInterval(() => {
+                updateUserOnlineStatus(chatId, true);
+            }, 20000); // A cada 20 segundos
+        }
+        
+        window.addEventListener('beforeunload', () => {
+            if (currentChatId) {
+                updateUserOnlineStatus(currentChatId, false);
+            }
+        });
+
+        // --- LÓGICA COMPARTILHADA (CARDS E TELA DE CHAT) ---
+        function createChatCard(chat) {
+            const card = document.createElement('div');
+            card.className = 'flex items-center gap-4 p-3 rounded-2xl hover:bg-primary-light dark:hover:bg-gray-700 cursor-pointer';
+            card.dataset.chatId = chat.id;
+
+            const defaultIcon = `<div class="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V4a2 2 0 012-2h8z" /></svg></div>`;
+            const imageElement = chat.imageUrl 
+                ? `<img src="${chat.imageUrl}" class="w-14 h-14 rounded-full object-cover" onerror="this.outerHTML='${defaultIcon}'">`
+                : defaultIcon;
+
+            card.innerHTML = `
+                ${imageElement}
+                <div class="flex-grow">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 dark:text-dark-text">${chat.name}</h3>
+                        <p class="text-xs text-gray-400 dark:text-dark-text-secondary">10:55 am</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <p class="text-sm text-gray-500 dark:text-dark-text-secondary truncate">Última mensagem aqui...</p>
+                        <span class="bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">2</span>
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', () => openChat(chat.id));
+            return card;
+        }
+
+        async function openChat(chatId) {
+            currentChatId = chatId;
+            const chatRef = doc(db, 'chats', chatId);
+            const chatSnap = await getDoc(chatRef);
+            if (!chatSnap.exists()) {
+                showNotification("Chat não encontrado.");
+                return;
+            }
+            const chatData = chatSnap.data();
+
+            document.getElementById('chat-name-header').textContent = chatData.name;
+            document.getElementById('chat-header-image').src = chatData.imageUrl || 'https://placehold.co/40x40/E2E8F0/4A5568?text=?';
+            const messagesContainer = document.getElementById('messages-container');
+            if (chatData.backgroundUrl) {
+                messagesContainer.style.backgroundImage = `url('${chatData.backgroundUrl}')`;
+            } else {
+                messagesContainer.style.backgroundImage = '';
+            }
+
+            showView('chat-view');
+            listenForMessages(chatId);
+            updateUserOnlineStatus(chatId, true);
+            startHeartbeat(chatId);
+        }
+
+        function listenForMessages(chatId) {
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = '<div class="loader mx-auto"></div>';
+
+            const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp'));
+            if (unsubscribeFromMessages) unsubscribeFromMessages();
+            
+            // Listener para as mensagens
+            unsubscribeFromMessages = onSnapshot(q, (snapshot) => {
+                messagesContainer.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const senderProfile = allUsersCache.find(u => u.id === message.senderId);
+                    const photoURL = senderProfile?.photoURL || 'https://placehold.co/100x100/E2E8F0/4A5568?text=?';
+
+                    const messageEl = document.createElement('div');
+                    const isSender = message.senderId === currentUserProfile.id;
+
+                    messageEl.className = `flex items-end gap-3 ${isSender ? 'flex-row-reverse' : 'flex-row'}`;
+                    
+                    const bubbleClass = isSender ? 'message-bubble-sent' : 'message-bubble-received';
+
+                    messageEl.innerHTML = `
+                        <img src="${photoURL}" class="w-8 h-8 rounded-full object-cover self-start">
+                        <div class="max-w-xs md:max-w-md lg:max-w-lg">
+                            ${!isSender ? `<p class="text-xs text-gray-500 dark:text-dark-text-secondary mb-1 ml-2">${message.senderName}</p>` : ''}
+                            <div class="p-3 ${bubbleClass}">
+                                <p class="break-words">${message.text}</p>
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(messageEl);
+                });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+
+            // Listener para o status online do chat
+            const chatRef = doc(db, 'chats', chatId);
+            onSnapshot(chatRef, (doc) => {
+                const chatData = doc.data();
+                const now = Date.now();
+                let onlineCount = 0;
+                let onlineUsers = [];
+                if (chatData.onlineStatus) {
+                    Object.entries(chatData.onlineStatus).forEach(([userId, timestamp]) => {
+                        if (timestamp && (now - timestamp.toDate().getTime()) < 35000) {
+                            onlineCount++;
+                            const userProfile = allUsersCache.find(u => u.id === userId);
+                            if (userProfile) onlineUsers.push(userProfile);
+                        }
+                    });
+                }
+                document.getElementById('online-status-btn').textContent = `● ${onlineCount} online`;
+                
+                const onlineUsersList = document.getElementById('online-users-list');
+                onlineUsersList.innerHTML = '';
+                if (onlineUsers.length > 0) {
+                    onlineUsers.forEach(user => {
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center gap-3';
+                        li.innerHTML = `<img src="${user.photoURL || 'https://placehold.co/40x40/E2E8F0/4A5568?text=?'}" class="w-8 h-8 rounded-full object-cover"><span class="dark:text-dark-text">${user.name}</span>`;
+                        onlineUsersList.appendChild(li);
+                    });
+                } else {
+                    onlineUsersList.innerHTML = '<p class="text-sm text-center text-gray-500 dark:text-dark-text-secondary">Ninguém online no momento.</p>';
+                }
+            });
+        }
+
+        document.getElementById('online-status-btn').addEventListener('click', () => showModal('online-users-modal'));
+        document.getElementById('close-online-users-modal-btn').addEventListener('click', () => showModal('online-users-modal', false));
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+
+            if (text && currentChatId) {
+                input.value = '';
+                try {
+                    await addDoc(collection(db, 'chats', currentChatId, 'messages'), {
+                        text: text,
+                        senderId: currentUserProfile.id,
+                        senderName: currentUserProfile.name || 'Usuário',
+                        timestamp: serverTimestamp()
+                    });
+                    updateUserOnlineStatus(currentChatId, true); // Atualiza o status ao enviar msg
+                } catch (error) {
+                    console.error("Erro ao enviar mensagem: ", error);
+                    showNotification("Não foi possível enviar a mensagem.");
+                    input.value = text;
+                }
+            }
+        });
+
+        document.getElementById('back-to-dashboard-btn').addEventListener('click', () => {
+            if (unsubscribeFromMessages) unsubscribeFromMessages();
+            clearInterval(onlineStatusHeartbeat);
+            updateUserOnlineStatus(currentChatId, false);
+            currentChatId = null;
+            document.getElementById('messages-container').style.backgroundImage = ''; // Limpa o fundo
+            showView('dashboard-view');
+        });
+
+    </script>
+</body>
+</html>
