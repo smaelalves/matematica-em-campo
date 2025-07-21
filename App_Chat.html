@@ -145,7 +145,7 @@
         <main id="chats-list-container" class="flex-grow p-2 overflow-y-auto">
             <!-- Lista de chats aqui -->
         </main>
-        <button id="open-create-chat-modal-btn" class="hidden absolute bottom-6 right-6 bg-primary text-white w-14 h-14 rounded-full shadow-lg items-center justify-center text-3xl">+</button>
+        <button id="open-create-chat-modal-btn" class="hidden absolute bottom-6 right-6 bg-primary text-white w-14 h-14 rounded-full shadow-lg justify-center items-center text-3xl">+</button>
     </div>
 
 
@@ -166,9 +166,11 @@
         </main>
         <footer class="bg-white dark:bg-dark-card p-2 shadow-inner sticky bottom-0">
             <form id="message-form" class="flex items-center gap-2">
-                <input id="message-input" type="text" placeholder="Escreva uma mensagem..." autocomplete="off" class="flex-grow p-3 border-none rounded-full focus:outline-none bg-gray-100 dark:bg-gray-700 dark:text-white">
-                <button type="submit" class="bg-primary text-white rounded-full p-3 hover:bg-primary/90">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                 <div class="flex-grow flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-2">
+                    <input id="message-input" type="text" placeholder="Escreva uma mensagem..." autocomplete="off" class="flex-grow p-3 border-none focus:outline-none bg-transparent dark:text-white">
+                 </div>
+                <button type="submit" class="bg-primary text-white rounded-full p-3 hover:bg-primary/90 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                 </button>
             </form>
         </footer>
@@ -176,7 +178,7 @@
 
 
     <!-- MODAIS -->
-    <div id="create-chat-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+    <div id="create-chat-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-md w-full max-h-[90vh] flex flex-col">
             <h2 class="text-2xl font-bold text-gray-800 dark:text-dark-text mb-4">Criar Novo Chat</h2>
             <form id="create-chat-form" class="space-y-4 flex-grow overflow-y-auto pr-2">
@@ -206,7 +208,7 @@
         </div>
     </div>
 
-    <div id="online-users-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+    <div id="online-users-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-lg max-w-sm w-full">
             <h3 class="text-xl font-bold text-gray-800 dark:text-dark-text mb-4">Usuários Online</h3>
             <ul id="online-users-list" class="space-y-2 max-h-60 overflow-y-auto">
@@ -216,7 +218,7 @@
         </div>
     </div>
 
-    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+    <div id="notification-modal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50" style="display: none;">
         <div class="bg-white dark:bg-dark-card p-8 rounded-2xl shadow-lg text-center max-w-sm">
             <p id="notification-message" class="text-lg text-gray-800 dark:text-dark-text"></p>
             <button id="notification-ok-btn" class="mt-6 w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 font-bold">OK</button>
@@ -384,7 +386,6 @@
         }
 
         function listenForTeacherChats() {
-            // FIX: Professor should only see chats they created to avoid permission errors.
             const q = query(collection(db, 'chats'), where('createdBy', '==', currentUserProfile.id));
             if (unsubscribeFromChats) unsubscribeFromChats();
             unsubscribeFromChats = onSnapshot(q, (snapshot) => {
@@ -491,24 +492,37 @@
             card.className = 'flex items-center gap-4 p-3 rounded-2xl hover:bg-primary-light dark:hover:bg-gray-700 cursor-pointer';
             card.dataset.chatId = chat.id;
 
-            const defaultIcon = `<div class="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V4a2 2 0 012-2h8z" /></svg></div>`;
-            const imageElement = chat.imageUrl 
-                ? `<img src="${chat.imageUrl}" class="w-14 h-14 rounded-full object-cover" onerror="this.outerHTML='${defaultIcon}'">`
-                : defaultIcon;
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'w-14 h-14 rounded-full flex-shrink-0 relative ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-dark-card';
+            
+            if (chat.imageUrl) {
+                const img = document.createElement('img');
+                img.src = chat.imageUrl;
+                img.className = 'w-full h-full rounded-full object-cover';
+                img.onerror = () => {
+                    imageContainer.innerHTML = `<div class="w-full h-full rounded-full bg-primary-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V4a2 2 0 012-2h8z" /></svg></div>`;
+                };
+                imageContainer.appendChild(img);
+            } else {
+                imageContainer.innerHTML = `<div class="w-full h-full rounded-full bg-primary-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V4a2 2 0 012-2h8z" /></svg></div>`;
+            }
 
-            card.innerHTML = `
-                ${imageElement}
-                <div class="flex-grow">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800 dark:text-dark-text">${chat.name}</h3>
-                        <p class="text-xs text-gray-400 dark:text-dark-text-secondary">10:55 am</p>
-                    </div>
-                    <div class="flex justify-between items-center mt-1">
-                        <p class="text-sm text-gray-500 dark:text-dark-text-secondary truncate">Última mensagem aqui...</p>
-                        <span class="bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">2</span>
-                    </div>
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'flex-grow';
+            contentDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 dark:text-dark-text">${chat.name}</h3>
+                    <p class="text-xs text-gray-400 dark:text-dark-text-secondary">10:55 am</p>
+                </div>
+                <div class="flex justify-between items-center mt-1">
+                    <p class="text-sm text-gray-500 dark:text-dark-text-secondary truncate">Última mensagem aqui...</p>
+                    <span class="bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">2</span>
                 </div>
             `;
+
+            card.appendChild(imageContainer);
+            card.appendChild(contentDiv);
+
             card.addEventListener('click', () => openChat(chat.id));
             return card;
         }
